@@ -62,7 +62,7 @@
   <object id="7" name="playerSpawn1" type="Spawn" x="482.378" y="369.075">
    <point/>
   </object>
-  <object id="8" name="playerSpawn3" type="Spawn" x="770.683" y="293.914">
+  <object id="8" name="playerSpawn3" type="Spawn" x="758.343" y="293.914">
    <point/>
   </object>
   <object id="9" name="playerSpawn2" type="Spawn" x="512.667" y="241.189">

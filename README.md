@@ -1,3 +1,9 @@
-# fightclub
+# Fightclub
 
-on ne parle pas du fightclub.
+## How to run the project
+
+```bash
+docker compose up --build 
+``` 
+
+
