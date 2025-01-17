@@ -52,14 +52,14 @@
 </data>
  </layer>
  <objectgroup id="2" name="obstacle">
-  <object id="2" x="390.2" y="302.178" width="89.8367" height="12.7042"/>
-  <object id="3" type="obstacle" x="420.145" y="371.143" width="352.995" height="126.134"/>
-  <object id="4" type="obstacle" x="715.064" y="297.641" width="86.2069" height="17.2414"/>
-  <object id="5" type="obstacle" x="636.116" y="250.454" width="93.4664" height="14.5191"/>
-  <object id="6" type="obstacle" x="470.054" y="243.194" width="87.1143" height="21.7786"/>
+  <object id="2" name="obstacle" type="obstacle" x="390.2" y="308.353" width="89.8367" height="6.52882"/>
+  <object id="3" name="obstacle" type="obstacle" x="406.422" y="385.552" width="387.303" height="205.728"/>
+  <object id="4" name="obstacle" type="obstacle" x="715.064" y="307.247" width="86.2069" height="7.63525"/>
+  <object id="5" name="obstacle" type="obstacle" x="636.116" y="257.316" width="93.4664" height="7.65757"/>
+  <object id="6" name="obstacle" type="obstacle" x="470.054" y="257.603" width="87.1143" height="7.36938"/>
  </objectgroup>
  <objectgroup id="3" name="spawn">
-  <object id="7" name="playerSpawn1" type="Spawn" x="482.378" y="369.075">
+  <object id="7" name="playerSpawn1" type="Spawn" x="492.118" y="347.508">
    <point/>
   </object>
   <object id="8" name="playerSpawn3" type="Spawn" x="758.343" y="293.914">
@@ -68,7 +68,7 @@
   <object id="9" name="playerSpawn2" type="Spawn" x="512.667" y="241.189">
    <point/>
   </object>
-  <object id="10" name="playerSpawn4" type="Spawn" x="682.06" y="366.832">
+  <object id="10" name="playerSpawn4" type="Spawn" x="681.364" y="350.135">
    <point/>
   </object>
  </objectgroup>
