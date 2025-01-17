@@ -190,3 +190,68 @@ class Game:
         if self.player2.is_attacking and self.player2.attack_rect.colliderect(self.player1.rect):
             damage = self.player2.get_attack_damage()
             self.player1.take_damage(damage) 
+
+    pygame.init()
+screen_info = pygame.display.Info()
+screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h), pygame.FULLSCREEN)
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (50, 50, 50)
+
+def draw_text(surface, text, font, color, x, y):
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect(center=(x, y))
+    surface.blit(text_surface, text_rect)
+
+def main_menu():
+    font = pygame.font.Font(None, 74)
+    button_font = pygame.font.Font(None, 50)
+
+    buttons = [
+        {"text": "Play", "rect": pygame.Rect(screen_info.current_w // 2 - 100, 300, 200, 60)},
+        {"text": "Settings", "rect": pygame.Rect(screen_info.current_w // 2 - 100, 400, 200, 60)},
+        {"text": "Quit", "rect": pygame.Rect(screen_info.current_w // 2 - 100, 500, 200, 60)}
+    ]
+
+    menu_running = True
+    while menu_running:
+        screen.fill(BLACK)
+        draw_text(screen, "Main Menu", font, WHITE, screen_info.current_w // 2, 150)
+
+        for button in buttons:
+            pygame.draw.rect(screen, GRAY, button["rect"])
+            draw_text(screen, button["text"], button_font, WHITE, button["rect"].centerx, button["rect"].centery)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for button in buttons:
+                    if button["rect"].collidepoint(event.pos):
+                        if button["text"] == "Play":
+                            return "play"
+                        elif button["text"] == "Settings":
+                            return "settings"
+                        elif button["text"] == "Quit":
+                            pygame.quit()
+                            exit()
+
+def settings_menu():
+    font = pygame.font.Font(None, 74)
+    settings_running = True
+    while settings_running:
+        screen.fill(BLACK)
+        draw_text(screen, "Settings", font, WHITE, screen_info.current_w // 2, 150)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                settings_running = False
+
+        pygame.display.flip()

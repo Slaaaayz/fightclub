@@ -1,8 +1,14 @@
-from src.game import Game
+from src.game import main_menu, settings_menu, Game
 
 def main():
-    game = Game()
-    game.run()
+    while True:
+        action = main_menu()
+
+        if action == "play":
+            game = Game()
+            game.run()
+        elif action == "settings":
+            settings_menu()
 
 if __name__ == "__main__":
     main()
