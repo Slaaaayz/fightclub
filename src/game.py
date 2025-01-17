@@ -1,7 +1,7 @@
 import pygame
 import pytmx
-from player import Player
-from camera import Camera
+from src.player import Player
+from src.camera import Camera
 import random 
 
 class Game:
@@ -15,8 +15,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         
-        # Chargement de la map
-        self.tmx_data = pytmx.load_pygame("map.tmx")
+        # Chargement de la map avec le chemin corrigé
+        self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
         # Redimensionner la surface de la map pour qu'elle s'adapte à l'écran
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
@@ -25,8 +25,8 @@ class Game:
         spawn_points = self.get_spawn_points()
         # Ajuster les positions de spawn en fonction de la nouvelle taille
         scaled_spawns = self.scale_positions(spawn_points)
-        self.player1 = Player(scaled_spawns[0], "player.png", 1)
-        self.player2 = Player(scaled_spawns[1], "player.png", 2)
+        self.player1 = Player(scaled_spawns[0], "Assets/images/characters/player.png", 1)
+        self.player2 = Player(scaled_spawns[1], "Assets/images/characters/player.png", 2)
         
         # Création de la caméra
         self.camera = Camera(self.width, self.height)
