@@ -238,15 +238,11 @@ class Player:
                     #     self.rect.top = obstacle.bottom
                     #     self.velocity.y = 0
 
-    def draw(self, screen, camera):
-        # Application de la caméra à la position du joueur
-        draw_pos = camera.apply(self.rect)
-        
+    def draw(self, screen):
         # Flip du sprite selon la direction
         sprite = pygame.transform.flip(self.sprite, not self.facing_right, False)
-        screen.blit(sprite, draw_pos)
+        screen.blit(sprite, self.rect)
         
         # Debug: affichage du rectangle d'attaque
         if self.is_attacking:
-            attack_pos = camera.apply(self.attack_rect)
-            pygame.draw.rect(screen, (255, 0, 0), attack_pos, 2) 
+            pygame.draw.rect(screen, (255, 0, 0), self.attack_rect, 2) 

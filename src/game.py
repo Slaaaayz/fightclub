@@ -1,7 +1,6 @@
 import pygame
 import pytmx
 from src.player import Player
-from src.camera import Camera
 import random 
 
 class Game:
@@ -15,7 +14,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         
-        # Chargement de la map avec le chemin corrigé
+        # Chargement de la map
         self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
         # Redimensionner la surface de la map pour qu'elle s'adapte à l'écran
@@ -27,9 +26,6 @@ class Game:
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/player.png", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/player.png", 2)
-        
-        # Création de la caméra
-        self.camera = Camera(self.width, self.height)
 
     def create_map_surface(self):
         # Création de la surface de la map
@@ -121,19 +117,17 @@ class Game:
         if self.player1.lives <= 0 or self.player2.lives <= 0:
             self.running = False  # Fin du jeu
         
-        self.camera.update(self.player1, self.player2)
-        
         # Gestion des collisions entre joueurs
         if self.player1.rect.colliderect(self.player2.rect):
             self.handle_player_collision()
 
     def draw(self):
         self.screen.fill((0, 0, 0))
-        
         self.screen.blit(self.map_surface, (0, 0))
         
-        self.player1.draw(self.screen, self.camera)
-        self.player2.draw(self.screen, self.camera)
+        # Dessin des joueurs directement sur l'écran
+        self.player1.draw(self.screen)
+        self.player2.draw(self.screen)
         
         # Affichage des barres de vie
         self.draw_health_bars()
