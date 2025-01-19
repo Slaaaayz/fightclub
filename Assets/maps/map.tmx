@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="75" height="46" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="11">
+<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="75" height="46" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="11">
  <tileset firstgid="1" source="map.tsx"/>
  <layer id="1" name="Calque de Tuiles 1" width="75" height="46">
   <data encoding="csv">
@@ -52,11 +52,11 @@
 </data>
  </layer>
  <objectgroup id="2" name="obstacle">
-  <object id="2" name="obstacle" type="obstacle" x="405.783" y="313.448" width="58.0707" height="3.83171"/>
-  <object id="3" name="obstacle" type="obstacle" x="406.422" y="394.542" width="387.303" height="196.738"/>
-  <object id="4" name="obstacle" type="obstacle" x="728.25" y="312.941" width="65.8287" height="3.73942"/>
-  <object id="5" name="obstacle" type="obstacle" x="647.803" y="260.013" width="70.3911" height="4.96046"/>
-  <object id="6" name="obstacle" type="obstacle" x="481.741" y="260.6" width="63.14" height="4.37259"/>
+  <object id="2" name="obstacle" type="obstacle" x="431.17" y="313.448" width="25.1585" height="3.83171"/>
+  <object id="3" name="obstacle" type="obstacle" x="432.009" y="399.81" width="333.119" height="75.576"/>
+  <object id="4" name="obstacle" type="obstacle" x="785.442" y="315.199" width="34.2236" height="3.73942"/>
+  <object id="5" name="obstacle" type="obstacle" x="690.699" y="260.013" width="53.8348" height="4.96046"/>
+  <object id="6" name="obstacle" type="obstacle" x="520.312" y="261.45" width="26.6281" height="4.37259"/>
  </objectgroup>
  <objectgroup id="3" name="spawn">
   <object id="7" name="playerSpawn1" type="Spawn" x="544.862" y="380.473">
