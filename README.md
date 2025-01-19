@@ -1,4 +1,4 @@
-# Fightclub
+# Fight Club
 
 Un jeu de combat 2D inspiré de Brawlhalla, développé avec Pygame.
 
@@ -49,21 +49,36 @@ python3 main.py
 - Plus les dégâts sont élevés, plus le knockback est important
 - Les combos augmentent les dégâts (jusqu'à 2x)
 - Perdre toutes ses vies = défaite
+- Tomber de la plateforme = perte d'une vie
 
-### Pour quitter
-- Appuyez sur `Échap`
+### Système de combat
 
-## Système de combat
+#### Types d'attaques
+- **Attaque légère** : 
+  - Dégâts : 5
+  - Portée : Courte
+  
+- **Attaque lourde** :
+  - Dégâts : 10
+  - Portée : Moyenne
 
-### Combos
+- **Attaque spéciale** :
+  - Dégâts : 15
+  - Portée : Longue
+
+#### Système de Combo
 - Enchaînez les coups en moins de 0.5 seconde
-- Chaque coup augmente les dégâts de 20%
+- Chaque coup réussi augmente les dégâts de 20%
 - Maximum : 2x dégâts
-- Le combo se réinitialise après 1 seconde
+- Le combo se réinitialise après 1 seconde sans coup
 
-### Attaques spéciales
-- Disponibles après 2 coups réussis
-- Dégâts plus importants
-- Plus long temps de récupération
+### Options
+- Réglage du volume (Master, Musique, SFX)
+- Affichage des FPS
+- CAffichage des contrôles
 
 
+### Credit
+- CHORT Maxime
+- DIARD Tristan
+- ANDREANI Noah
