@@ -7,7 +7,7 @@ from src.sound_manager import SoundManager
 from src.settings import Settings
 
 class Game:
-    def __init__(self, screen, sound_manager):
+    def __init__(self, screen, resources):
         self.screen = screen
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
@@ -15,19 +15,19 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         
-        # Utiliser le sound_manager passé en paramètre
-        self.sound_manager = sound_manager
+        # Stocker la référence aux ressources
+        self.resources = resources
         
-        # Initialiser les settings et appliquer les paramètres
-        self.settings = Settings()
-        self.apply_settings()  # Nouvelle méthode
+        # Utiliser les ressources partagées
+        self.sound_manager = resources.sound_manager
+        self.settings = resources.settings
         
         # Chargement de la map
         self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
         
-        # Création des joueurs avec le sound_manager partagé
+        # Création des joueurs avec les sprites préchargés
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
@@ -105,6 +105,10 @@ class Game:
         return obstacles
 
     def run(self):
+        # Recharger et appliquer les paramètres au début du jeu
+        self.settings.load_settings()
+        self.apply_settings()
+        
         while self.running:
             self.handle_events()
             self.update()
@@ -141,6 +145,9 @@ class Game:
                 exit()
             elif action == "replay":
                 self.reset_game()
+            elif action == "menu":
+                self.running = False
+                return "menu"
 
         # Mettre à jour les volumes
         self.sound_manager.set_master_volume(self.settings.master_volume)
@@ -243,18 +250,25 @@ class Game:
 
     def reset_game(self):
         """Réinitialise le jeu sans recréer la fenêtre"""
+        # Recharger et appliquer les paramètres lors du reset
+        self.settings.load_settings()
+        self.apply_settings()
+        
         self.running = True
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
         
-        # Ne pas oublier de réassigner le sound_manager lors du reset
+        # Assigner le sound_manager aux joueurs
         self.player1.sound_manager = self.sound_manager
         self.player2.sound_manager = self.sound_manager
 
     def show_game_over(self, winner):
-        """Affiche l'écran de fin de partie"""
+        # Recharger et appliquer les paramètres au début de l'écran game over
+        self.settings.load_settings()
+        self.apply_settings()
+        
         # Jouer le son de mort sans arrêter la musique de fond
         self.sound_manager.play_sound('death')
         
@@ -282,7 +296,7 @@ class Game:
         replay_button = pygame.Rect(self.width//2 - button_width - button_margin, 
                                   self.height * 3//4, 
                                   button_width, button_height)
-        quit_button = pygame.Rect(self.width//2 + button_margin, 
+        menu_button = pygame.Rect(self.width//2 + button_margin,  # Renommé de quit_button à menu_button
                                 self.height * 3//4, 
                                 button_width, button_height)
         
@@ -301,12 +315,12 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return "quit"
-                if event.type == pygame.MOUSEBUTTONDOWN and scale > 0.8:  # Attendre que l'animation soit presque finie
+                if event.type == pygame.MOUSEBUTTONDOWN and scale > 0.8:
                     if replay_button.collidepoint(event.pos):
                         action = "replay"
                         animation_done = True
-                    elif quit_button.collidepoint(event.pos):
-                        action = "quit"
+                    elif menu_button.collidepoint(event.pos):  # Changé de quit_button à menu_button
+                        action = "menu"  # Retourner "menu" au lieu de "quit"
                         animation_done = True
             
             # Mise à jour de l'animation
@@ -328,7 +342,7 @@ class Game:
             self.screen.blit(rotated_text, rotated_rect)
             
             # Texte du gagnant
-            if scale > 0.5:  # Apparaît après le "GAME OVER"
+            if scale > 0.5:
                 winner_text = text_font.render(f"Player {winner} Wins!", True, winner_colors[winner])
                 winner_rect = winner_text.get_rect(center=(self.width//2, self.height//2))
                 winner_text.set_alpha(alpha)
@@ -343,13 +357,13 @@ class Game:
                                (replay_button.centerx - replay_text.get_width()//2,
                                 replay_button.centery - replay_text.get_height()//2))
                 
-                # Quit button
-                button_color = (255, 100, 100) if quit_button.collidepoint(mouse_pos) else (200, 50, 50)
-                pygame.draw.rect(self.screen, button_color, quit_button)
-                quit_text = button_font.render("Quit", True, (255, 255, 255))
-                self.screen.blit(quit_text,
-                               (quit_button.centerx - quit_text.get_width()//2,
-                                quit_button.centery - quit_text.get_height()//2))
+                # Menu button (anciennement Quit button)
+                button_color = (255, 100, 100) if menu_button.collidepoint(mouse_pos) else (200, 50, 50)
+                pygame.draw.rect(self.screen, button_color, menu_button)
+                menu_text = button_font.render("Menu", True, (255, 255, 255))
+                self.screen.blit(menu_text,
+                               (menu_button.centerx - menu_text.get_width()//2,
+                                menu_button.centery - menu_text.get_height()//2))
             
             # Ajouter l'affichage des FPS
             self.draw_fps()
@@ -360,7 +374,7 @@ class Game:
         return action
 
     def run_menu(self):
-        menu = Menu(self.screen, self.sound_manager, self)
+        menu = Menu(self.screen, self.resources, is_temp_menu=False)
         running = True
         
         while running:
