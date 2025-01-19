@@ -76,7 +76,7 @@ python main.py # Windows
 ### Options
 - Réglage du volume (Master, Musique, SFX)
 - Affichage des FPS
-- CAffichage des contrôles
+- Affichage des contrôles
 
 
 ### Credit
