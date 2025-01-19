@@ -21,7 +21,7 @@ def main():
         if action == "play":
             game.run()
         elif action == "quit":
-            # Arrêter la musique avant de quitter
+            # Arrêter la musique seulement quand on quitte complètement le jeu
             sound_manager.stop_background_music()
             running = False
     

@@ -3,11 +3,12 @@ from src.settings import Settings
 from src.sound_manager import SoundManager
 
 class Menu:
-    def __init__(self, screen, sound_manager):
+    def __init__(self, screen, sound_manager, game=None, is_temp_menu=False):
         self.screen = screen
         self.width = screen.get_width()
         self.height = screen.get_height()
         self.settings = Settings()
+        self.game = game  # Stocker la référence à l'instance de Game
         
         # Ajouter le clock
         self.clock = pygame.time.Clock()
@@ -71,9 +72,10 @@ class Menu:
         
         self.dragging_slider = None  # Pour suivre le slider en cours de drag
         
-        # S'assurer que la musique joue dans le menu
-        if not pygame.mixer.music.get_busy():
-            self.sound_manager.play_background_music()
+        # Ne pas vérifier la musique si c'est un menu temporaire
+        if not is_temp_menu:
+            if not pygame.mixer.music.get_busy():
+                self.sound_manager.play_background_music()
 
     def create_buttons(self):
         self.button_rects = []
@@ -194,9 +196,16 @@ class Menu:
                 pygame.display.toggle_fullscreen()
             elif "Show FPS" in selected_option:
                 self.settings.show_fps = not self.settings.show_fps
+                self.settings.save_settings()
+                # Mettre à jour les paramètres dans Game si disponible
+                if self.game:
+                    self.game.settings = self.settings
+                print(f"Show FPS set to: {self.settings.show_fps}")
             elif selected_option == "Back":
-                self.current_tab = "main"
-            self.settings.save_settings()
+                if hasattr(self, 'is_temp_menu') and self.is_temp_menu:
+                    return "back"  # Pour le menu pause
+                else:
+                    self.current_tab = "main"  # Pour le menu principal
                 
         elif self.current_tab == "controls":
             if selected_option == "Back":
@@ -382,13 +391,4 @@ class Menu:
             # Texte du bouton
             back_text = self.font.render("Back", True, self.COLOR_ACTIVE)
             back_rect_text = back_text.get_rect(center=back_rect.center)
-            self.screen.blit(back_text, back_rect_text)
-        
-        # Afficher les FPS si activé (en bas à droite)
-        if self.settings.show_fps:
-            fps = str(int(self.clock.get_fps()))
-            fps_surface = pygame.font.Font(None, 36).render(fps, True, self.COLOR_ACTIVE)
-            fps_rect = fps_surface.get_rect(bottomright=(self.width - 10, self.height - 10))
-            self.screen.blit(fps_surface, fps_rect)
-        
-        pygame.display.flip() 
+            self.screen.blit(back_text, back_rect_text) 

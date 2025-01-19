@@ -40,7 +40,9 @@ class SoundManager:
             music_path = os.path.join("Assets/music", "background.mp3")
             if os.path.exists(music_path):
                 pygame.mixer.music.load(music_path)
+                # Ajuster le volume initial
                 pygame.mixer.music.set_volume(self.master_volume * self.music_volume)
+                print(f"Volume de la musique: {self.master_volume * self.music_volume}")  # Debug
         except Exception as e:
             print(f"Erreur chargement musique: {e}")
     
@@ -62,7 +64,14 @@ class SoundManager:
                 print(f"Erreur lors de la lecture du son {name}: {e}")
     
     def play_background_music(self):
-        pygame.mixer.music.play(-1)  # -1 pour jouer en boucle
+        try:
+            if not pygame.mixer.music.get_busy():
+                pygame.mixer.music.play(-1)  # -1 pour jouer en boucle
+                # S'assurer que le volume est correctement défini
+                pygame.mixer.music.set_volume(self.master_volume * self.music_volume)
+                print("Musique démarrée")  # Debug
+        except Exception as e:
+            print(f"Erreur lors de la lecture de la musique: {e}")
     
     def stop_background_music(self):
         pygame.mixer.music.stop()

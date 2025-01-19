@@ -5,9 +5,9 @@ class Settings:
     def __init__(self):
         self.fullscreen = True
         self.show_fps = False
-        self.master_volume = 0.5
-        self.music_volume = 0.5
-        self.sfx_volume = 0.5
+        self.master_volume = 0.7
+        self.music_volume = 0.7
+        self.sfx_volume = 0.7
         self.settings_file = "settings.json"
         self.load_settings()
 
@@ -19,9 +19,10 @@ class Settings:
                     data = json.load(f)
                     self.fullscreen = data.get('fullscreen', True)
                     self.show_fps = data.get('show_fps', False)
-                    self.master_volume = data.get('master_volume', 0.5)
-                    self.music_volume = data.get('music_volume', 0.5)
-                    self.sfx_volume = data.get('sfx_volume', 0.5)
+                    self.master_volume = data.get('master_volume', 0.7)
+                    self.music_volume = data.get('music_volume', 0.7)
+                    self.sfx_volume = data.get('sfx_volume', 0.7)
+                    print(f"Settings loaded - Show FPS: {self.show_fps}")
             except Exception as e:
                 print(f"Erreur lors du chargement des paramètres: {e}")
 
@@ -37,5 +38,6 @@ class Settings:
         try:
             with open(self.settings_file, 'w') as f:
                 json.dump(data, f)
+            print(f"Settings saved - Show FPS: {self.show_fps}")
         except Exception as e:
             print(f"Erreur lors de la sauvegarde des paramètres: {e}") 

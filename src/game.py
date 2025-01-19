@@ -31,10 +31,6 @@ class Game:
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
-        
-        # Démarrer la musique de fond si elle n'est pas déjà en cours
-        if not pygame.mixer.music.get_busy():
-            self.sound_manager.play_background_music()
 
     def create_map_surface(self):
         # Création de la surface de la map
@@ -118,9 +114,7 @@ class Game:
                 exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.running = False
-                    pygame.quit()
-                    exit()
+                    self.show_pause_menu()
 
     def update(self):
         self.player1.update(self.get_obstacles())
@@ -145,6 +139,14 @@ class Game:
         self.sound_manager.set_music_volume(self.settings.music_volume)
         self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
 
+    def draw_fps(self):
+        """Méthode utilitaire pour afficher les FPS"""
+        if self.settings.show_fps:
+            fps = str(int(self.clock.get_fps()))
+            fps_surface = pygame.font.Font(None, 36).render(fps, True, (255, 255, 255))
+            fps_rect = fps_surface.get_rect(bottomright=(self.width - 10, self.height - 10))
+            self.screen.blit(fps_surface, fps_rect)
+
     def draw(self):
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.map_surface, (0, 0))
@@ -152,13 +154,7 @@ class Game:
         self.player1.draw(self.screen)
         self.player2.draw(self.screen)
         self.draw_health_bars()
-        
-        # Afficher les FPS si activé (en bas à droite)
-        if self.settings.show_fps:
-            fps = str(int(self.clock.get_fps()))
-            fps_surface = pygame.font.Font(None, 36).render(fps, True, (255, 255, 255))
-            fps_rect = fps_surface.get_rect(bottomright=(self.width - 10, self.height - 10))
-            self.screen.blit(fps_surface, fps_rect)
+        self.draw_fps()
         
         pygame.display.flip()
 
@@ -343,17 +339,16 @@ class Game:
                                (quit_button.centerx - quit_text.get_width()//2,
                                 quit_button.centery - quit_text.get_height()//2))
             
+            # Ajouter l'affichage des FPS
+            self.draw_fps()
+            
             pygame.display.flip()
             clock.tick(60)
         
         return action
 
     def run_menu(self):
-        # S'assurer que la musique joue quand on retourne au menu
-        if not pygame.mixer.music.get_busy():
-            self.sound_manager.play_background_music()
-        
-        menu = Menu(self.screen, self.sound_manager)
+        menu = Menu(self.screen, self.sound_manager, self)
         running = True
         
         while running:
@@ -369,4 +364,158 @@ class Game:
                     return "play"
             
             menu.draw()
+            self.draw_fps()
+            pygame.display.flip()
+            self.clock.tick(60)
+
+    def show_pause_menu(self):
+        """Affiche le menu pause"""
+        # Recharger les paramètres depuis le fichier
+        self.settings.load_settings()
+        # Appliquer les volumes chargés
+        self.sound_manager.set_master_volume(self.settings.master_volume)
+        self.sound_manager.set_music_volume(self.settings.music_volume)
+        self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
+        
+        # Surface semi-transparente
+        overlay = pygame.Surface((self.width, self.height))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(128)
+        
+        # Police et couleurs
+        font = pygame.font.Font(None, 74)
+        button_font = pygame.font.Font(None, 50)
+        COLOR_INACTIVE = (40, 40, 60)
+        COLOR_HOVER = (60, 60, 80)
+        COLOR_TEXT = (255, 255, 255)
+        
+        # Texte "PAUSE"
+        pause_text = font.render("PAUSE", True, COLOR_TEXT)
+        pause_rect = pause_text.get_rect(center=(self.width/2, self.height * 0.3))
+        
+        # Boutons
+        button_width = 200
+        button_height = 50
+        button_margin = 20
+        
+        resume_button = pygame.Rect(self.width/2 - button_width/2,
+                                  self.height * 0.45,
+                                  button_width, button_height)
+        
+        menu_button = pygame.Rect(self.width/2 - button_width/2,
+                                 self.height * 0.45 + button_height + button_margin,
+                                 button_width, button_height)
+        
+        quit_button = pygame.Rect(self.width/2 - button_width/2,
+                                 self.height * 0.45 + (button_height + button_margin) * 2,
+                                 button_width, button_height)
+        
+        paused = True
+        in_settings = False
+        settings_menu = None
+        last_hover = None  # Pour suivre le dernier bouton survolé
+        
+        while paused:
+            mouse_pos = pygame.mouse.get_pos()
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        if in_settings:
+                            in_settings = False
+                        else:
+                            paused = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if in_settings:
+                        if settings_menu:
+                            if settings_menu.handle_event(event) == "back":
+                                in_settings = False
+                    else:
+                        if resume_button.collidepoint(mouse_pos):
+                            paused = False
+                        elif menu_button.collidepoint(mouse_pos):
+                            self.running = False
+                            return "menu"
+                        elif quit_button.collidepoint(mouse_pos):
+                            self.sound_manager.stop_background_music()
+                            self.running = False
+                            pygame.quit()
+                            exit()
+            
+            # Gérer les événements du menu des paramètres
+            if in_settings and settings_menu:
+                settings_menu.handle_event(event)
+        
+            # Dessiner l'état actuel du jeu
+            self.screen.blit(self.map_surface, (0, 0))
+            self.player1.draw(self.screen)
+            self.player2.draw(self.screen)
+            self.draw_health_bars()
+            
+            # Dessiner l'overlay semi-transparent
+            self.screen.blit(overlay, (0, 0))
+            
+            if in_settings and settings_menu:
+                settings_menu.draw()
+            else:
+                # Dessiner le texte PAUSE
+                self.screen.blit(pause_text, pause_rect)
+                
+                # Dessiner les boutons de pause
+                if paused and not in_settings:
+                    mouse_pos = pygame.mouse.get_pos()
+                    
+                    # Définir les rectangles des boutons
+                    resume_button = pygame.Rect(self.width/2 - 100, self.height/2 - 100, 200, 50)
+                    menu_button = pygame.Rect(self.width/2 - 100, self.height/2, 200, 50)
+                    quit_button = pygame.Rect(self.width/2 - 100, self.height/2 + 100, 200, 50)
+                    
+                    # Vérifier le hover pour le son
+                    current_hover = None
+                    if resume_button.collidepoint(mouse_pos):
+                        current_hover = "resume"
+                    elif menu_button.collidepoint(mouse_pos):
+                        current_hover = "menu"
+                    elif quit_button.collidepoint(mouse_pos):
+                        current_hover = "quit"
+                    
+                    # Jouer le son si on survole un nouveau bouton
+                    if current_hover != last_hover and current_hover is not None:
+                        self.sound_manager.play_sound('hover', volume=0.3)
+                    last_hover = current_hover
+                    
+                    # Couleurs pour l'effet hover
+                    COLOR_INACTIVE = (40, 40, 60)
+                    COLOR_HOVER = (60, 60, 80)
+                    
+                    # Dessiner les boutons avec effet hover
+                    pygame.draw.rect(self.screen, 
+                        COLOR_HOVER if resume_button.collidepoint(mouse_pos) else COLOR_INACTIVE, 
+                        resume_button)
+                    pygame.draw.rect(self.screen, 
+                        COLOR_HOVER if menu_button.collidepoint(mouse_pos) else COLOR_INACTIVE, 
+                        menu_button)
+                    pygame.draw.rect(self.screen, 
+                        COLOR_HOVER if quit_button.collidepoint(mouse_pos) else COLOR_INACTIVE, 
+                        quit_button)
+                    
+                    # Texte des boutons avec la police par défaut
+                    default_font = pygame.font.Font(None, 50)
+                    resume_text = default_font.render("Resume", True, (255, 255, 255))
+                    menu_text = default_font.render("Menu", True, (255, 255, 255))
+                    quit_text = default_font.render("Quit", True, (255, 255, 255))
+                    
+                    # Centrer le texte sur les boutons
+                    self.screen.blit(resume_text, resume_text.get_rect(center=resume_button.center))
+                    self.screen.blit(menu_text, menu_text.get_rect(center=menu_button.center))
+                    self.screen.blit(quit_text, quit_text.get_rect(center=quit_button.center))
+            
+            # Remplacer l'ancien code FPS par la nouvelle méthode
+            self.draw_fps()
+            
+            pygame.display.flip()
             self.clock.tick(60)
