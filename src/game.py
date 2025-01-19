@@ -12,9 +12,8 @@ class Game:
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
         
-        # Calculer le ratio d'aspect pour le scaling
-        self.scale_x = self.width / 1280  # 1280 est la résolution de base
-        self.scale_y = self.height / 720  # 720 est la résolution de base
+        self.scale_x = self.width / 1280  
+        self.scale_y = self.height / 720  
         
         self.clock = pygame.time.Clock()
         self.running = True
@@ -22,23 +21,19 @@ class Game:
         self.sound_manager = resources.sound_manager
         self.settings = resources.settings
         
-        # Chargement de la map
         self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
         
-        # Création des joueurs
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
         
-        # Assigner le sound_manager aux joueurs
         self.player1.sound_manager = self.sound_manager
         self.player2.sound_manager = self.sound_manager
 
     def create_map_surface(self):
-        # Création de la surface de la map
         temp_surface = pygame.Surface((
             self.tmx_data.width * self.tmx_data.tilewidth,
             self.tmx_data.height * self.tmx_data.tileheight
