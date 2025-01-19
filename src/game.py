@@ -2,6 +2,7 @@ import pygame
 import pytmx
 from src.player import Player
 import random 
+from src.menu import Menu
 
 class Game:
     def __init__(self):
@@ -311,6 +312,21 @@ class Game:
             clock.tick(60)
         
         return action
+
+    def run_menu(self):
+        menu = Menu(self.screen)
+        running = True
+        
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return False
+                running = menu.handle_event(event)
+            
+            menu.draw()
+            self.clock.tick(60)
+        
+        return True  # True si le jeu doit démarrer, False si on doit quitter
 
     pygame.init()
 screen_info = pygame.display.Info()
