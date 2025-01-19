@@ -15,7 +15,8 @@ pip install -r requirements.txt
 
 ### Lancement du jeu
 ```bash
-python3 main.py
+python3 main.py # Linux
+python main.py # Windows
 ```
 
 ## Comment jouer
