@@ -22,10 +22,9 @@ class Game:
         
         # Création des joueurs aux points de spawn
         spawn_points = self.get_spawn_points()
-        # Ajuster les positions de spawn en fonction de la nouvelle taille
         scaled_spawns = self.scale_positions(spawn_points)
-        self.player1 = Player(scaled_spawns[0], "Assets/images/characters/player.png", 1)
-        self.player2 = Player(scaled_spawns[1], "Assets/images/characters/player.png", 2)
+        self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
+        self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)  # Pour l'instant même chemin
 
     def create_map_surface(self):
         # Création de la surface de la map
@@ -140,7 +139,14 @@ class Game:
         health_bar_height = 20
         margin = 20
         
-        player_portrait = pygame.transform.scale(self.player1.sprite, (portrait_size, portrait_size))
+        # Utiliser le sprite actuel du SpriteManager au lieu de self.sprite
+        player1_sprite = self.player1.sprite_manager.get_current_sprite()
+        if player1_sprite:
+            player_portrait = pygame.transform.scale(player1_sprite, (portrait_size, portrait_size))
+        else:
+            # Créer un portrait par défaut si pas de sprite
+            player_portrait = pygame.Surface((portrait_size, portrait_size))
+            player_portrait.fill((255, 0, 0))  # Rouge par défaut
         
         # Interface du joueur 1 (gauche)
         self.screen.blit(player_portrait, (margin, margin))
@@ -154,7 +160,15 @@ class Game:
                          health_bar_width * (self.player1.health/100), health_bar_height))
         
         # Interface du joueur 2 (droite)
-        player2_portrait = pygame.transform.flip(player_portrait, True, False)
+        # Utiliser le sprite actuel du joueur 2
+        player2_sprite = self.player2.sprite_manager.get_current_sprite()
+        if player2_sprite:
+            player2_portrait = pygame.transform.scale(player2_sprite, (portrait_size, portrait_size))
+        else:
+            player2_portrait = pygame.Surface((portrait_size, portrait_size))
+            player2_portrait.fill((0, 0, 255))  # Bleu par défaut pour le joueur 2
+        
+        player2_portrait = pygame.transform.flip(player2_portrait, True, False)
         portrait_x = self.width - margin - portrait_size
         self.screen.blit(player2_portrait, (portrait_x, margin))
         # Contour de la barre de vie

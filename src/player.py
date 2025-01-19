@@ -1,10 +1,25 @@
 import pygame
 import math
+from src.sprite_manager import SpriteManager
+from src.sound_manager import SoundManager
 
 class Player:
     def __init__(self, pos, sprite_path, player_num):
-        self.sprite = pygame.image.load(sprite_path)
-        self.rect = self.sprite.get_rect()
+        # Initialisation du sprite manager
+        self.sprite_manager = SpriteManager()
+        try:
+            self.sprite_manager.load_sprite_sheets(sprite_path)
+        except Exception as e:
+            print(f"Erreur lors du chargement des sprites pour le joueur {player_num}: {e}")
+        
+        # Obtenir le premier sprite pour initialiser le rect
+        initial_sprite = self.sprite_manager.get_current_sprite()
+        if initial_sprite:
+            self.rect = initial_sprite.get_rect()
+        else:
+            print(f"Attention: Utilisation d'un rectangle par défaut pour le joueur {player_num}")
+            self.rect = pygame.Rect(0, 0, 50, 50)
+        
         self.rect.x, self.rect.y = pos
         
         self.velocity = pygame.math.Vector2(0, 0)
@@ -30,8 +45,32 @@ class Player:
         self.player_num = player_num
         self.facing_right = True if player_num == 1 else False
         self.jump_pressed = False  # Nouvel attribut pour suivre l'état de la touche de saut
+        
+        # Initialiser le gestionnaire de sons
+        self.sound_manager = SoundManager()
 
     def update(self, obstacles):
+        # Mettre à jour l'animation
+        self.sprite_manager.update(1)
+        
+        # Déterminer l'animation en fonction de l'état
+        if self.is_attacking:
+            if self.attack_type == "light":
+                self.sprite_manager.set_animation("attack1")
+            elif self.attack_type == "heavy":
+                self.sprite_manager.set_animation("attack2")
+            elif self.attack_type == "special":
+                self.sprite_manager.set_animation("attack3")
+        elif self.velocity.y != 0:  # En l'air (saut ou chute)
+            self.sprite_manager.set_animation("jump")
+        elif abs(self.velocity.x) > 0:
+            self.sprite_manager.set_animation("run")
+        else:
+            self.sprite_manager.set_animation("idle")
+        
+        # Mettre à jour l'orientation du sprite
+        self.sprite_manager.set_flip(not self.facing_right)
+        
         # Si en état de spawn, attendre un mouvement pour commencer à tomber
         if self.is_spawning:
             keys = pygame.key.get_pressed()
@@ -137,10 +176,12 @@ class Player:
         if self.velocity.y == 0:
             self.velocity.y = self.jump_power
             self.can_double_jump = True
+            self.sound_manager.play_sound('jump')
         # Double saut
         elif self.can_double_jump:
             self.velocity.y = self.jump_power
             self.can_double_jump = False
+            self.sound_manager.play_sound('jump')
 
     def attack(self, attack_type):
         current_time = pygame.time.get_ticks()
@@ -148,6 +189,9 @@ class Player:
         if self.attack_cooldown > 0:
             return
             
+        # Jouer le son d'attaque
+        self.sound_manager.play_sound('attack')
+        
         # Gestion des combos
         if current_time - self.last_attack_time < 500:  # Fenêtre de 0.5 seconde pour les combos
             self.combo_count += 1
@@ -189,6 +233,10 @@ class Player:
             return
             
         self.health -= amount
+        
+        # Jouer le son de dégât
+        self.sound_manager.play_sound('hurt')
+        
         if self.health <= 0:
             self.lives -= 1
             if self.lives > 0:
@@ -197,6 +245,8 @@ class Player:
                 self.is_dead = True
                 self.health = 0
                 self.acceleration.y = 1.5
+                # Jouer le son de mort
+                self.sound_manager.play_sound('death')
         
         # Période d'invincibilité après avoir été touché
         self.invincible = 30
@@ -239,9 +289,9 @@ class Player:
                     #     self.velocity.y = 0
 
     def draw(self, screen):
-        # Flip du sprite selon la direction
-        sprite = pygame.transform.flip(self.sprite, not self.facing_right, False)
-        screen.blit(sprite, self.rect)
+        current_sprite = self.sprite_manager.get_current_sprite()
+        if current_sprite:
+            screen.blit(current_sprite, self.rect)
         
         # Debug: affichage du rectangle d'attaque
         if self.is_attacking:
