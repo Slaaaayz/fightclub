@@ -10,6 +10,7 @@ def main():
     
     # Créer une seule instance de SoundManager
     sound_manager = SoundManager()
+    # Démarrer la musique une seule fois au lancement
     sound_manager.play_background_music()
     
     running = True
@@ -20,6 +21,8 @@ def main():
         if action == "play":
             game.run()
         elif action == "quit":
+            # Arrêter la musique avant de quitter
+            sound_manager.stop_background_music()
             running = False
     
     pygame.quit()

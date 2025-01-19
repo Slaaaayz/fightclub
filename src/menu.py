@@ -9,6 +9,9 @@ class Menu:
         self.height = screen.get_height()
         self.settings = Settings()
         
+        # Ajouter le clock
+        self.clock = pygame.time.Clock()
+        
         # Couleurs
         self.COLOR_INACTIVE = (40, 40, 60)
         self.COLOR_ACTIVE = (255, 255, 255)
@@ -67,6 +70,10 @@ class Menu:
         self.slider_button_size = 24
         
         self.dragging_slider = None  # Pour suivre le slider en cours de drag
+        
+        # S'assurer que la musique joue dans le menu
+        if not pygame.mixer.music.get_busy():
+            self.sound_manager.play_background_music()
 
     def create_buttons(self):
         self.button_rects = []
@@ -376,5 +383,12 @@ class Menu:
             back_text = self.font.render("Back", True, self.COLOR_ACTIVE)
             back_rect_text = back_text.get_rect(center=back_rect.center)
             self.screen.blit(back_text, back_rect_text)
+        
+        # Afficher les FPS si activé (en bas à droite)
+        if self.settings.show_fps:
+            fps = str(int(self.clock.get_fps()))
+            fps_surface = pygame.font.Font(None, 36).render(fps, True, self.COLOR_ACTIVE)
+            fps_rect = fps_surface.get_rect(bottomright=(self.width - 10, self.height - 10))
+            self.screen.blit(fps_surface, fps_rect)
         
         pygame.display.flip() 

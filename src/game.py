@@ -31,6 +31,10 @@ class Game:
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
+        
+        # Démarrer la musique de fond si elle n'est pas déjà en cours
+        if not pygame.mixer.music.get_busy():
+            self.sound_manager.play_background_music()
 
     def create_map_surface(self):
         # Création de la surface de la map
@@ -149,11 +153,12 @@ class Game:
         self.player2.draw(self.screen)
         self.draw_health_bars()
         
-        # Afficher les FPS si activé
+        # Afficher les FPS si activé (en bas à droite)
         if self.settings.show_fps:
             fps = str(int(self.clock.get_fps()))
             fps_surface = pygame.font.Font(None, 36).render(fps, True, (255, 255, 255))
-            self.screen.blit(fps_surface, (10, 10))
+            fps_rect = fps_surface.get_rect(bottomright=(self.width - 10, self.height - 10))
+            self.screen.blit(fps_surface, fps_rect)
         
         pygame.display.flip()
 
@@ -242,8 +247,8 @@ class Game:
 
     def show_game_over(self, winner):
         """Affiche l'écran de fin de partie"""
-        # Jouer le son de mort
-        self.player1.sound_manager.play_sound('death')
+        # Jouer le son de mort sans arrêter la musique de fond
+        self.sound_manager.play_sound('death')
         
         # Configuration de base
         overlay = pygame.Surface((self.width, self.height))
@@ -344,7 +349,11 @@ class Game:
         return action
 
     def run_menu(self):
-        menu = Menu(self.screen, self.sound_manager)  # Passer le sound_manager au menu
+        # S'assurer que la musique joue quand on retourne au menu
+        if not pygame.mixer.music.get_busy():
+            self.sound_manager.play_background_music()
+        
+        menu = Menu(self.screen, self.sound_manager)
         running = True
         
         while running:
