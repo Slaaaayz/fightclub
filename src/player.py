@@ -117,6 +117,19 @@ class Player:
         # Mise à jour du rectangle d'attaque
         self.update_attack_rect()
 
+         # Mort si le joueur tombe
+        if self.rect.y >= 700:
+            self.health = 0
+            self.lives -= 1
+            if self.lives > 0:
+                self.respawn()
+            else:
+                self.is_dead = True
+                self.health = 0
+                self.acceleration.y = 1.5
+            
+        
+
     def handle_player1_input(self, keys):
         # Mouvement horizontal
         if keys[pygame.K_q]:
