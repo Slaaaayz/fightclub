@@ -44,7 +44,6 @@ class Menu:
             "Master Volume: {}%",  # Master en premier
             "Music Volume: {}%",   # Musique en second
             "SFX Volume: {}%",     # SFX en dernier
-            "Fullscreen: {}",
             "Show FPS: {}",
             "Back"
         ]
@@ -188,36 +187,16 @@ class Menu:
                 self.settings.master_volume = min(1.0, max(0.0, 
                     self.settings.master_volume + (0.1 if pygame.mouse.get_pos()[0] > self.width/2 else -0.1)))
                 self.sound_manager.set_master_volume(self.settings.master_volume)
-            elif "Fullscreen" in selected_option:
-                self.settings.fullscreen = not self.settings.fullscreen
-                # Obtenir les dimensions actuelles de l'écran
-                current_w = pygame.display.Info().current_w
-                current_h = pygame.display.Info().current_h
-                
-                if self.settings.fullscreen:
-                    self.screen = pygame.display.set_mode((current_w, current_h), pygame.FULLSCREEN)
-                else:
-                    self.screen = pygame.display.set_mode((1280, 720))
-                
-                # Mettre à jour les dimensions après le changement
-                self.width = self.screen.get_width()
-                self.height = self.screen.get_height()
-                
-                # Recréer les boutons pour les adapter à la nouvelle taille
-                self.create_buttons()
-                
             elif "Show FPS" in selected_option:
                 self.settings.show_fps = not self.settings.show_fps
                 self.settings.save_settings()
-                # Mettre à jour les paramètres dans Game si disponible
                 if hasattr(self, 'game'):
                     self.game.settings = self.settings
-                print(f"Show FPS set to: {self.settings.show_fps}")
             elif selected_option == "Back":
                 if hasattr(self, 'is_temp_menu') and self.is_temp_menu:
-                    return "back"  # Pour le menu pause
+                    return "back"
                 else:
-                    self.current_tab = "main"  # Pour le menu principal
+                    self.current_tab = "main"
                 
         elif self.current_tab == "controls":
             if selected_option == "Back":
@@ -236,51 +215,49 @@ class Menu:
         return 0
 
     def draw_controls_info(self):
-        # Titre
-        title_text = "CONTROLS"
-        title_surface = self.title_font.render(title_text, True, self.COLOR_ACTIVE)
+        # Effacer l'écran
+        self.screen.fill(self.COLOR_BACKGROUND)
+        
+        # Titre "FIGHT CLUB" avec effet d'ombre
+        title_text = "FIGHT CLUB"
+        shadow_surface = self.title_font.render(title_text, True, (0, 0, 0))
+        title_surface = self.title_font.render(title_text, True, (0, 200, 255))
+        shadow_rect = shadow_surface.get_rect(center=(self.width/2 + 4, self.height * 0.15 + 4))
         title_rect = title_surface.get_rect(center=(self.width/2, self.height * 0.15))
-        
-        # Paramètres pour les contrôles
-        info_font = pygame.font.Font(None, 36)  # Utiliser la police par défaut
-        y_start = self.height * 0.3
-        spacing = 45
-        section_spacing = 80
-        
-        # Couleurs
-        title_color = (0, 200, 255)  # Bleu clair pour les titres
-        text_color = (255, 255, 255)  # Blanc pour le texte
-        key_color = (200, 200, 200)  # Gris clair pour les touches
-        
-        # Fonction helper pour dessiner une ligne de contrôle
-        def draw_control_line(text, key, x, y):
-            # Texte de l'action
-            text_surface = info_font.render(text, True, text_color)
-            text_rect = text_surface.get_rect(right=x - 20)
-            self.screen.blit(text_surface, (text_rect.x, y))
-            
-            # Touche
-            key_surface = info_font.render(key, True, key_color)
-            key_rect = key_surface.get_rect(left=x + 20)
-            
-            # Dessiner un rectangle autour de la touche
-            padding = 10
-            key_bg_rect = pygame.Rect(key_rect.x - padding, 
-                                    key_rect.y - padding/2,
-                                    key_rect.width + padding*2,
-                                    key_rect.height + padding)
-            pygame.draw.rect(self.screen, self.COLOR_INACTIVE, key_bg_rect, border_radius=5)
-            pygame.draw.rect(self.screen, self.COLOR_HOVER, key_bg_rect, 2, border_radius=5)
-            
-            self.screen.blit(key_surface, key_rect)
-        
-        # Dessiner le titre principal
+        self.screen.blit(shadow_surface, shadow_rect)
         self.screen.blit(title_surface, title_rect)
         
-        # Joueur 1
-        p1_title = info_font.render("Player 1", True, title_color)
-        self.screen.blit(p1_title, p1_title.get_rect(center=(self.width * 0.25, y_start)))
+        # Paramètres pour les contrôles
+        control_font = pygame.font.Font(None, 40)
+        y_start = self.height * 0.35
+        spacing = 60
         
+        # Fonction pour dessiner une section de contrôles
+        def draw_control_section(title, controls, x_center):
+            # Titre de la section
+            title_surf = control_font.render(title, True, (0, 200, 255))
+            title_rect = title_surf.get_rect(center=(x_center, y_start))
+            self.screen.blit(title_surf, title_rect)
+            
+            y = y_start + spacing
+            for action, key in controls:
+                # Action
+                action_surf = control_font.render(action, True, (255, 255, 255))
+                action_rect = action_surf.get_rect(right=x_center - 30)
+                self.screen.blit(action_surf, action_rect)
+                
+                # Touche
+                key_bg = pygame.Rect(x_center + 10, y - 15, 80, 40)
+                pygame.draw.rect(self.screen, self.COLOR_INACTIVE, key_bg, border_radius=5)
+                pygame.draw.rect(self.screen, (60, 60, 80), key_bg, 2, border_radius=5)
+                
+                key_surf = control_font.render(key, True, (200, 200, 200))
+                key_rect = key_surf.get_rect(center=key_bg.center)
+                self.screen.blit(key_surf, key_rect)
+                
+                y += spacing
+        
+        # Contrôles Joueur 1
         controls_p1 = [
             ("Move Left", "Q"),
             ("Move Right", "D"),
@@ -289,16 +266,9 @@ class Menu:
             ("Heavy Attack", "A"),
             ("Special Attack", "E")
         ]
+        draw_control_section("PLAYER 1", controls_p1, self.width * 0.3)
         
-        y = y_start + section_spacing
-        for text, key in controls_p1:
-            draw_control_line(text, key, self.width * 0.25, y)
-            y += spacing
-        
-        # Joueur 2
-        p2_title = info_font.render("Player 2", True, title_color)
-        self.screen.blit(p2_title, p2_title.get_rect(center=(self.width * 0.75, y_start)))
-        
+        # Contrôles Joueur 2
         controls_p2 = [
             ("Move Left", "←"),
             ("Move Right", "→"),
@@ -307,11 +277,26 @@ class Menu:
             ("Heavy Attack", "↓"),
             ("Special Attack", "R-Shift")
         ]
+        draw_control_section("PLAYER 2", controls_p2, self.width * 0.7)
         
-        y = y_start + section_spacing
-        for text, key in controls_p2:
-            draw_control_line(text, key, self.width * 0.75, y)
-            y += spacing
+        # Bouton Back
+        back_rect = pygame.Rect(
+            self.width/2 - 100,
+            self.height * 0.85,
+            200,
+            50
+        )
+        
+        # Effet hover sur le bouton Back
+        mouse_pos = pygame.mouse.get_pos()
+        back_color = self.COLOR_HOVER if back_rect.collidepoint(mouse_pos) else self.COLOR_INACTIVE
+        
+        pygame.draw.rect(self.screen, back_color, back_rect, border_radius=5)
+        pygame.draw.rect(self.screen, (60, 60, 80), back_rect, 2, border_radius=5)
+        
+        back_text = self.font.render("Back", True, self.COLOR_ACTIVE)
+        back_text_rect = back_text.get_rect(center=back_rect.center)
+        self.screen.blit(back_text, back_text_rect)
 
     def draw(self):
         self.screen.fill(self.COLOR_BACKGROUND)

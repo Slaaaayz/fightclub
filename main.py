@@ -29,16 +29,12 @@ class GameResources:
 def main():
     pygame.init()
     
-    # Créer la fenêtre AVANT de créer les ressources
-    screen = pygame.display.set_mode((1280, 720))
+    # Toujours démarrer en plein écran
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.display.set_caption("Fight Club")
     
-    # Créer une seule instance des ressources APRÈS avoir créé la fenêtre
+    # Créer une seule instance des ressources
     resources = GameResources()
-    
-    # Appliquer le mode plein écran si nécessaire
-    if resources.settings.fullscreen:
-        screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     
     # Démarrer la musique une seule fois au lancement
     resources.sound_manager.play_background_music()

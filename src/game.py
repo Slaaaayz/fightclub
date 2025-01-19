@@ -27,7 +27,7 @@ class Game:
         self.map_surface = self.create_map_surface()
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
         
-        # Création des joueurs avec les sprites préchargés
+        # Création des joueurs
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
@@ -548,12 +548,6 @@ class Game:
 
     def apply_settings(self):
         """Applique les paramètres chargés depuis settings.json"""
-        # Appliquer le mode plein écran
-        if self.settings.fullscreen:
-            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        else:
-            pygame.display.set_mode((self.width, self.height))
-        
         # Appliquer les volumes
         self.sound_manager.set_master_volume(self.settings.master_volume)
         self.sound_manager.set_music_volume(self.settings.music_volume)
