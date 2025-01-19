@@ -1,19 +1,21 @@
-from src.game import main_menu, settings_menu, Game
+from src.game import Game
 import pygame
 
 def main():
+    pygame.init()
+    # Créer une seule fenêtre qui sera partagée
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    game = Game(screen)  # Passer l'écran au jeu
+    
     while True:
-        action = main_menu()
-
-        if action == "play":
-            game = Game()
-            game.run()
-            # Après la fin de la partie, retour automatique au menu principal
-            pygame.time.wait(500)  # Petit délai pour éviter les clics accidentels
-        elif action == "settings":
-            settings_menu()
-        elif action == "quit":
+        # Afficher le menu et obtenir l'action
+        action = game.run_menu()
+        
+        if action == "quit":
             break
+        elif action == "play":
+            game.run()  # Lancer le jeu
+            pygame.time.wait(500)  # Petit délai avant de revenir au menu
 
     pygame.quit()
 

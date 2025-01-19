@@ -48,10 +48,48 @@ class Player:
         
         # Initialiser le gestionnaire de sons
         self.sound_manager = SoundManager()
+        
+        # États des attaques
+        self.is_attacking = False
+        self.attack_cooldown = 0
+        self.attack_type = None
+        self.attack_rect = pygame.Rect(0, 0, 50, 50)
+        self.attack_direction = "right"
+        
+        # Cooldowns spécifiques pour chaque type d'attaque
+        self.light_attack_cooldown = 0
+        self.heavy_attack_cooldown = 0
+        self.special_attack_cooldown = 0
+        
+        # États des touches
+        self.light_attack_pressed = False
+        self.heavy_attack_pressed = False
+        self.special_attack_pressed = False
 
     def update(self, obstacles):
         # Mettre à jour l'animation
         self.sprite_manager.update(1)
+        
+        # Mise à jour des cooldowns
+        if self.light_attack_cooldown > 0:
+            self.light_attack_cooldown -= 1
+        if self.heavy_attack_cooldown > 0:
+            self.heavy_attack_cooldown -= 1
+        if self.special_attack_cooldown > 0:
+            self.special_attack_cooldown -= 1
+        
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
+            if self.attack_cooldown == 0:
+                self.is_attacking = False
+                self.attack_type = None
+                # Forcer la réinitialisation de l'animation
+                if self.velocity.y != 0:
+                    self.sprite_manager.set_animation("jump", force=True)
+                elif abs(self.velocity.x) > 0:
+                    self.sprite_manager.set_animation("run", force=True)
+                else:
+                    self.sprite_manager.set_animation("idle", force=True)
         
         # Déterminer l'animation en fonction de l'état
         if self.is_attacking:
@@ -89,6 +127,13 @@ class Player:
             
         # Mise à jour du rectangle d'attaque
         self.update_attack_rect()
+        
+        if self.invincible > 0:
+            self.invincible -= 1
+        
+        # Réinitialisation du combo si trop de temps s'est écoulé
+        if pygame.time.get_ticks() - self.last_attack_time > 1000:  # 1 seconde
+            self.combo_count = 0
 
          # Mort si le joueur tombe
         if self.rect.y >= 700:
@@ -116,19 +161,30 @@ class Player:
             
         # Gestion du saut
         if keys[pygame.K_z]:
-            if not self.jump_pressed:  # Seulement si la touche n'était pas déjà pressée
+            if not self.jump_pressed:
                 self.jump()
             self.jump_pressed = True
         else:
-            self.jump_pressed = False  # Réinitialisation quand la touche est relâchée
+            self.jump_pressed = False
 
         # Attaques
-        if keys[pygame.K_s]:  # Attaque légère
+        if keys[pygame.K_s] and not self.light_attack_pressed:  # Attaque légère
             self.attack("light")
-        elif keys[pygame.K_a]:  # Attaque lourde
+            self.light_attack_pressed = True
+        elif not keys[pygame.K_s]:
+            self.light_attack_pressed = False
+            
+        if keys[pygame.K_a] and not self.heavy_attack_pressed:  # Attaque lourde
             self.attack("heavy")
-        elif keys[pygame.K_e]:  # Attaque spéciale
+            self.heavy_attack_pressed = True
+        elif not keys[pygame.K_a]:
+            self.heavy_attack_pressed = False
+            
+        if keys[pygame.K_e] and not self.special_attack_pressed:  # Attaque spéciale
             self.attack("special")
+            self.special_attack_pressed = True
+        elif not keys[pygame.K_e]:
+            self.special_attack_pressed = False
 
     def handle_player2_input(self, keys):
         # Mouvement horizontal
@@ -143,19 +199,30 @@ class Player:
             
         # Gestion du saut
         if keys[pygame.K_UP]:
-            if not self.jump_pressed:  # Seulement si la touche n'était pas déjà pressée
+            if not self.jump_pressed:
                 self.jump()
             self.jump_pressed = True
         else:
-            self.jump_pressed = False  # Réinitialisation quand la touche est relâchée
+            self.jump_pressed = False
 
         # Attaques
-        if keys[pygame.K_RETURN]:  # Attaque légère avec Entrée
+        if keys[pygame.K_RETURN] and not self.light_attack_pressed:  # Attaque légère
             self.attack("light")
-        elif keys[pygame.K_DOWN]:  # Attaque lourde avec flèche bas
+            self.light_attack_pressed = True
+        elif not keys[pygame.K_RETURN]:
+            self.light_attack_pressed = False
+            
+        if keys[pygame.K_DOWN] and not self.heavy_attack_pressed:  # Attaque lourde
             self.attack("heavy")
-        elif keys[pygame.K_RSHIFT]:  # Attaque spéciale avec Shift droit
+            self.heavy_attack_pressed = True
+        elif not keys[pygame.K_DOWN]:
+            self.heavy_attack_pressed = False
+            
+        if keys[pygame.K_RSHIFT] and not self.special_attack_pressed:  # Attaque spéciale
             self.attack("special")
+            self.special_attack_pressed = True
+        elif not keys[pygame.K_RSHIFT]:
+            self.special_attack_pressed = False
 
     def jump(self):
         # Vérification si le joueur est au sol
@@ -172,14 +239,22 @@ class Player:
     def attack(self, attack_type):
         current_time = pygame.time.get_ticks()
         
-        if self.attack_cooldown > 0:
+        # Vérifier le cooldown spécifique au type d'attaque
+        if attack_type == "light" and self.light_attack_cooldown > 0:
+            return
+        elif attack_type == "heavy" and self.heavy_attack_cooldown > 0:
+            return
+        elif attack_type == "special" and self.special_attack_cooldown > 0:
+            return
+        
+        if self.is_attacking:  # Ne pas interrompre une attaque en cours
             return
             
         # Jouer le son d'attaque
         self.sound_manager.play_sound('attack')
         
         # Gestion des combos
-        if current_time - self.last_attack_time < 500:  # Fenêtre de 0.5 seconde pour les combos
+        if current_time - self.last_attack_time < 500:
             self.combo_count += 1
         else:
             self.combo_count = 0
@@ -190,18 +265,22 @@ class Player:
         
         # Configuration des attaques
         if attack_type == "light":
-            self.attack_cooldown = 15  # Frames
-            self.attack_rect.size = (60, 40)
+            self.attack_cooldown = 20
+            self.light_attack_cooldown = 30
+            self.sprite_manager.set_animation("attack1", force=True)
         elif attack_type == "heavy":
-            self.attack_cooldown = 30
-            self.attack_rect.size = (70, 50)
-        elif attack_type == "special" and self.combo_count >= 2:
-            self.attack_cooldown = 45
-            self.attack_rect.size = (80, 60)
+            self.attack_cooldown = 35
+            self.heavy_attack_cooldown = 45
+            self.sprite_manager.set_animation("attack2", force=True)
+        elif attack_type == "special":
+            self.attack_cooldown = 50
+            self.special_attack_cooldown = 60
+            self.sprite_manager.set_animation("attack3", force=True)
         else:
             return
 
-        self.attack_direction = "right" if self.facing_right else "left"
+        # Mettre à jour immédiatement le rectangle d'attaque
+        self.update_attack_rect()
 
     def get_attack_damage(self):
         base_damage = {
@@ -257,8 +336,22 @@ class Player:
         self.combo_count = 0
 
     def update_attack_rect(self):
+        """Met à jour la position du rectangle d'attaque"""
         if self.is_attacking:
-            if self.attack_direction == "right":
+            # Ajuster la taille en fonction du type d'attaque
+            if self.attack_type == "light":
+                width, height = 60, 40
+            elif self.attack_type == "heavy":
+                width, height = 70, 50
+            elif self.attack_type == "special":
+                width, height = 80, 60
+            else:
+                width, height = 50, 50
+            
+            self.attack_rect.size = (width, height)
+            
+            # Positionner le rectangle d'attaque
+            if self.facing_right:
                 self.attack_rect.midleft = self.rect.midright
             else:
                 self.attack_rect.midright = self.rect.midleft

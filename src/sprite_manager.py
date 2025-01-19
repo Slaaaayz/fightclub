@@ -6,7 +6,7 @@ class SpriteManager:
         self.sprites = {}
         self.current_animation = None
         self.current_frame = 0
-        self.frame_counter = 0  # Nouveau compteur de frames
+        self.frame_counter = 0
         
         # Nombre de frames de jeu à attendre avant de changer de frame d'animation
         self.animation_speeds = {
@@ -20,7 +20,15 @@ class SpriteManager:
             'death': 10     
         }
         
+        # Ajouter le nombre de frames pour chaque animation
+        self.animation_lengths = {
+            'attack1': 4,  # Exemple: l'animation d'attaque légère a 4 frames
+            'attack2': 4,  # Attaque lourde
+            'attack3': 4,  # Attaque spéciale
+        }
+        
         self.is_flipped = False
+        self.animation_finished = False
 
     def load_sprite_sheets(self, character_path):
         """Charge toutes les feuilles de sprites pour les différentes animations"""
@@ -101,34 +109,43 @@ class SpriteManager:
         return sprite
 
     def update(self, dt):
-        """Met à jour l'animation"""
-        if not self.sprites or self.current_animation not in self.sprites:
+        if self.current_animation is None:
             return
-        
-        animation_frames = self.sprites[self.current_animation]
-        if not animation_frames:
-            return
-
-        # Incrémenter le compteur de frames
+            
         self.frame_counter += 1
+        animation_speed = self.animation_speeds.get(self.current_animation, 8)
         
-        # Obtenir la vitesse pour l'animation actuelle
-        frames_to_wait = self.animation_speeds.get(self.current_animation, 15)
-        
-        # Changer de frame quand on atteint le nombre de frames à attendre
-        if self.frame_counter >= frames_to_wait:
-            self.frame_counter = 0  # Réinitialiser le compteur
-            self.current_frame = (self.current_frame + 1) % len(animation_frames)
+        if self.frame_counter >= animation_speed:
+            self.frame_counter = 0
+            
+            # Pour les animations d'attaque
+            if self.current_animation in self.animation_lengths:
+                # Ne pas incrémenter si on a déjà atteint la dernière frame
+                if self.current_frame < self.animation_lengths[self.current_animation] - 1:
+                    self.current_frame += 1
+                else:
+                    self.animation_finished = True
+                    self.current_animation = 'idle'
+                    self.current_frame = 0
+            else:
+                # Pour les animations en boucle (idle, run, jump)
+                self.current_frame = (self.current_frame + 1) % len(self.sprites[self.current_animation])
 
     def set_animation(self, animation_name, force=False):
         """Change l'animation en cours"""
         if animation_name not in self.sprites:
             return False
             
+        # Ne pas démarrer une nouvelle animation d'attaque si une est déjà en cours
+        if self.current_animation in self.animation_lengths and not self.animation_finished:
+            if animation_name in self.animation_lengths and not force:
+                return False
+        
         if self.current_animation != animation_name or force:
             self.current_animation = animation_name
             self.current_frame = 0
-            self.frame_counter = 0  # Réinitialiser aussi le compteur de frames
+            self.frame_counter = 0
+            self.animation_finished = False
         return True
 
     def set_flip(self, flip):

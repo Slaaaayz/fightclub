@@ -5,10 +5,8 @@ import random
 from src.menu import Menu
 
 class Game:
-    def __init__(self):
-        pygame.init()
-        # Initialisation en plein écran
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    def __init__(self, screen):
+        self.screen = screen
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
         
@@ -18,14 +16,13 @@ class Game:
         # Chargement de la map
         self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
-        # Redimensionner la surface de la map pour qu'elle s'adapte à l'écran
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
         
         # Création des joueurs aux points de spawn
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
-        self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)  # Pour l'instant même chemin
+        self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
 
     def create_map_surface(self):
         # Création de la surface de la map
@@ -113,6 +110,9 @@ class Game:
         self.player1.update(self.get_obstacles())
         self.player2.update(self.get_obstacles())
         
+        # Ajouter la vérification des collisions d'attaque
+        self.handle_player_collision()
+        
         # Vérifier si un joueur a gagné
         if self.player1.lives <= 0 or self.player2.lives <= 0:
             winner = 2 if self.player1.lives <= 0 else 1
@@ -120,10 +120,9 @@ class Game:
             if action == "quit":
                 self.running = False
                 pygame.quit()
-                exit()  # Quitte complètement le programme
+                exit()
             elif action == "replay":
-                # Réinitialiser le jeu
-                self.__init__()
+                self.reset_game()
 
     def draw(self):
         self.screen.fill((0, 0, 0))
@@ -202,13 +201,24 @@ class Game:
                                      margin + portrait_size + 5))
 
     def handle_player_collision(self):
+        """Gère les collisions entre les joueurs et leurs attaques"""
         if self.player1.is_attacking and self.player1.attack_rect.colliderect(self.player2.rect):
-            damage = self.player1.get_attack_damage()
-            self.player2.take_damage(damage)
+            if not self.player2.invincible:  # Vérifier si le joueur 2 n'est pas invincible
+                damage = self.player1.get_attack_damage()
+                self.player2.take_damage(damage)
             
         if self.player2.is_attacking and self.player2.attack_rect.colliderect(self.player1.rect):
-            damage = self.player2.get_attack_damage()
-            self.player1.take_damage(damage) 
+            if not self.player1.invincible:  # Vérifier si le joueur 1 n'est pas invincible
+                damage = self.player2.get_attack_damage()
+                self.player1.take_damage(damage)
+
+    def reset_game(self):
+        """Réinitialise le jeu sans recréer la fenêtre"""
+        self.running = True
+        spawn_points = self.get_spawn_points()
+        scaled_spawns = self.scale_positions(spawn_points)
+        self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
+        self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
 
     def show_game_over(self, winner):
         """Affiche l'écran de fin de partie"""
@@ -320,75 +330,14 @@ class Game:
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    return False
-                running = menu.handle_event(event)
+                    return "quit"
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    return "quit"
+                
+                result = menu.handle_event(event)
+                if result is False:  # Le menu indique qu'il faut démarrer le jeu
+                    self.reset_game()  # Réinitialiser le jeu avant de commencer
+                    return "play"
             
             menu.draw()
             self.clock.tick(60)
-        
-        return True  # True si le jeu doit démarrer, False si on doit quitter
-
-    pygame.init()
-screen_info = pygame.display.Info()
-screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h), pygame.FULLSCREEN)
-
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GRAY = (50, 50, 50)
-
-def draw_text(surface, text, font, color, x, y):
-    text_surface = font.render(text, True, color)
-    text_rect = text_surface.get_rect(center=(x, y))
-    surface.blit(text_surface, text_rect)
-
-def main_menu():
-    font = pygame.font.Font(None, 74)
-    button_font = pygame.font.Font(None, 50)
-
-    buttons = [
-        {"text": "Play", "rect": pygame.Rect(screen_info.current_w // 2 - 100, 300, 200, 60)},
-        {"text": "Settings", "rect": pygame.Rect(screen_info.current_w // 2 - 100, 400, 200, 60)},
-        {"text": "Quit", "rect": pygame.Rect(screen_info.current_w // 2 - 100, 500, 200, 60)}
-    ]
-
-    menu_running = True
-    while menu_running:
-        screen.fill(BLACK)
-        draw_text(screen, "Main Menu", font, WHITE, screen_info.current_w // 2, 150)
-
-        for button in buttons:
-            pygame.draw.rect(screen, GRAY, button["rect"])
-            draw_text(screen, button["text"], button_font, WHITE, button["rect"].centerx, button["rect"].centery)
-
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                for button in buttons:
-                    if button["rect"].collidepoint(event.pos):
-                        if button["text"] == "Play":
-                            return "play"
-                        elif button["text"] == "Settings":
-                            return "settings"
-                        elif button["text"] == "Quit":
-                            pygame.quit()
-                            exit()
-
-def settings_menu():
-    font = pygame.font.Font(None, 74)
-    settings_running = True
-    while settings_running:
-        screen.fill(BLACK)
-        draw_text(screen, "Settings", font, WHITE, screen_info.current_w // 2, 150)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                settings_running = False
-
-        pygame.display.flip()
