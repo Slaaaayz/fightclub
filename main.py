@@ -6,18 +6,14 @@ from src.sprite_manager import SpriteManager
 
 class GameResources:
     def __init__(self):
-        # Charger les paramètres avant de créer la fenêtre
         self.settings = Settings()
         
-        # Créer une seule instance de SoundManager
         self.sound_manager = SoundManager()
         
-        # Appliquer les volumes initiaux
         self.sound_manager.set_master_volume(self.settings.master_volume)
         self.sound_manager.set_music_volume(self.settings.music_volume)
         self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
         
-        # Charger les sprites une seule fois
         self.knight_sprites = SpriteManager()
         self.rogue_sprites = SpriteManager()
         try:
@@ -29,14 +25,11 @@ class GameResources:
 def main():
     pygame.init()
     
-    # Toujours démarrer en plein écran
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.display.set_caption("Fight Club")
     
-    # Créer une seule instance des ressources
     resources = GameResources()
     
-    # Démarrer la musique une seule fois au lancement
     resources.sound_manager.play_background_music()
     
     running = True

@@ -8,42 +8,34 @@ class Menu:
         self.width = screen.get_width()
         self.height = screen.get_height()
         
-        # Utiliser les ressources partagées
         self.settings = resources.settings
         self.sound_manager = resources.sound_manager
         
-        # Ajouter le clock
         self.clock = pygame.time.Clock()
         
-        # Couleurs
         self.COLOR_INACTIVE = (40, 40, 60)
         self.COLOR_ACTIVE = (255, 255, 255)
         self.COLOR_HOVER = (60, 60, 80)
         self.COLOR_BACKGROUND = (20, 20, 30)
         
-        # Couleurs des sliders
         self.COLOR_SLIDER_BG = (40, 40, 60)
         self.COLOR_SLIDER_FG = (0, 200, 255)
         self.COLOR_SLIDER_HOVER = (0, 220, 255)
         
-        # Police
         self.font = pygame.font.Font(None, 50)
         self.title_font = pygame.font.Font(None, 90)
         
-        # États
         self.current_tab = "main"
         self.selected_option = 0
         self.hover_option = -1
         
-        # Sons du menu
-        self.last_hover = -1  # Pour éviter de jouer le son en continu
+        self.last_hover = -1 
         
-        # Options des menus
         self.main_options = ["Play", "Settings", "Controls", "Quit"]
         self.settings_options = [
-            "Master Volume: {}%",  # Master en premier
-            "Music Volume: {}%",   # Musique en second
-            "SFX Volume: {}%",     # SFX en dernier
+            "Master Volume: {}%",  
+            "Music Volume: {}%",   
+            "SFX Volume: {}%",     
             "Show FPS: {}",
             "Back"
         ]
@@ -53,25 +45,19 @@ class Menu:
             "Back"
         ]
         
-        # Rectangles des boutons
         self.button_rects = []
         self.sliders = {}
         self.create_buttons()
         
-        # Valeurs des paramètres
         self.volume_step = 10
         
-        # Dimensions des sliders améliorées
         self.slider_width = 400
         self.slider_height = 8
         self.slider_button_size = 24
         
-        self.dragging_slider = None  # Pour suivre le slider en cours de drag
+        self.dragging_slider = None 
         
-        # Ne pas vérifier la musique si c'est un menu temporaire
-        if not is_temp_menu:
-            if not pygame.mixer.music.get_busy():
-                self.sound_manager.play_background_music()
+    
 
     def create_buttons(self):
         self.button_rects = []
@@ -81,7 +67,6 @@ class Menu:
         start_y = self.height * 0.4
         for i, option in enumerate(options):
             if self.current_tab == "settings" and "Volume" in option:
-                # Créer un slider au lieu d'un bouton pour les options de volume
                 slider_rect = pygame.Rect(
                     self.width/2 - self.slider_width/2,
                     start_y + i * 70,
@@ -89,7 +74,6 @@ class Menu:
                     self.slider_height
                 )
                 self.sliders[option] = slider_rect
-                # Ajouter un rectangle vide pour maintenir l'alignement
                 self.button_rects.append(pygame.Rect(0, 0, 0, 0))
             else:
                 text_surface = self.font.render(option, True, self.COLOR_INACTIVE)
@@ -107,11 +91,9 @@ class Menu:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:  # Clic gauche
+            if event.button == 1:  
                 mouse_pos = event.pos
-                # Vérifier les sliders
                 for option, slider_rect in self.sliders.items():
-                    # Créer un rectangle plus grand pour le bouton du slider
                     value = self.get_slider_value(option)
                     button_x = slider_rect.left + (slider_rect.width * value) - self.slider_button_size/2
                     button_rect = pygame.Rect(button_x, slider_rect.y - self.slider_button_size/2,
@@ -120,7 +102,6 @@ class Menu:
                         self.dragging_slider = option
                         return True
                 
-                # Vérifier les boutons normaux
                 for i, rect in enumerate(self.button_rects):
                     if rect.collidepoint(event.pos):
                         return self.handle_click(i)
@@ -129,7 +110,6 @@ class Menu:
             self.dragging_slider = None
             
         elif event.type == pygame.MOUSEMOTION and self.dragging_slider:
-            # Mettre à jour la valeur du slider
             slider_rect = self.sliders[self.dragging_slider]
             value = (event.pos[0] - slider_rect.left) / slider_rect.width
             value = max(0, min(1, value))
@@ -145,14 +125,12 @@ class Menu:
             self.settings.save_settings()
             
         elif event.type == pygame.MOUSEMOTION:
-            # Gestion du hover
             mouse_pos = pygame.mouse.get_pos()
             old_hover = self.hover_option
             self.hover_option = -1
             for i, rect in enumerate(self.button_rects):
                 if rect.collidepoint(mouse_pos):
                     self.hover_option = i
-                    # Jouer le son de hover seulement quand on change de bouton
                     if old_hover != i:
                         self.sound_manager.play_sound('hover', volume=0.3)
                     break
@@ -165,7 +143,7 @@ class Menu:
         
         if self.current_tab == "main":
             if selected_option == "Play":
-                return False  # Démarrer le jeu
+                return False  
             elif selected_option == "Settings":
                 self.current_tab = "settings"
             elif selected_option == "Controls":
@@ -215,10 +193,8 @@ class Menu:
         return 0
 
     def draw_controls_info(self):
-        # Fond
         self.screen.fill(self.COLOR_BACKGROUND)
         
-        # Titre principal avec effet d'ombre
         title_text = "CONTROLS"
         shadow = self.title_font.render(title_text, True, (0, 0, 0))
         title = self.title_font.render(title_text, True, (0, 200, 255))
@@ -229,7 +205,6 @@ class Menu:
         self.screen.blit(shadow, shadow_rect)
         self.screen.blit(title, title_rect)
         
-        # Configuration des panneaux de contrôle
         panel_width = self.width * 0.35
         panel_height = self.height * 0.6
         panel_padding = 30
@@ -250,13 +225,10 @@ class Menu:
             panel_height
         )
         
-        # Fonction pour dessiner un panneau de contrôle
         def draw_control_panel(panel_rect, title, controls):
-            # Fond du panneau
             pygame.draw.rect(self.screen, self.COLOR_INACTIVE, panel_rect, border_radius=10)
             pygame.draw.rect(self.screen, (0, 200, 255), panel_rect, 2, border_radius=10)
             
-            # Titre du panneau
             panel_title = pygame.font.Font(None, 48).render(title, True, (0, 200, 255))
             title_rect = panel_title.get_rect(
                 centerx=panel_rect.centerx,
@@ -264,7 +236,6 @@ class Menu:
             )
             self.screen.blit(panel_title, title_rect)
             
-            # Ligne de séparation
             pygame.draw.line(
                 self.screen,
                 (0, 200, 255),
@@ -273,12 +244,10 @@ class Menu:
                 2
             )
             
-            # Contrôles
             y = title_rect.bottom + 40
             control_font = pygame.font.Font(None, 36)
             
             for action, key in controls:
-                # Action
                 action_text = control_font.render(action, True, (255, 255, 255))
                 action_rect = action_text.get_rect(
                     left=panel_rect.left + panel_padding,
@@ -286,11 +255,10 @@ class Menu:
                 )
                 self.screen.blit(action_text, action_rect)
                 
-                # Touche
                 key_bg = pygame.Rect(
-                    panel_rect.right - 120 - panel_padding,  # Un peu plus large pour les nouveaux textes
+                    panel_rect.right - 120 - panel_padding,  
                     y - 15,
-                    100,  # Plus large pour accommoder les nouveaux textes
+                    100,  
                     30
                 )
                 pygame.draw.rect(self.screen, (40, 40, 60), key_bg, border_radius=5)
@@ -302,7 +270,6 @@ class Menu:
                 
                 y += 60
         
-        # Contrôles des joueurs
         controls_p1 = [
             ("Move Left", "Q"),
             ("Move Right", "D"),
@@ -321,14 +288,12 @@ class Menu:
             ("Special Attack", "R-Shift")
         ]
         
-        # Dessiner les panneaux
         draw_control_panel(p1_panel, "PLAYER 1", controls_p1)
         draw_control_panel(p2_panel, "PLAYER 2", controls_p2)
 
     def draw(self):
         self.screen.fill(self.COLOR_BACKGROUND)
         
-        # Titre avec effet d'ombre
         title_text = "FIGHT CLUB"
         shadow_surface = self.title_font.render(title_text, True, (0, 0, 0))
         title_surface = self.title_font.render(title_text, True, (0, 200, 255))
@@ -337,25 +302,22 @@ class Menu:
         self.screen.blit(shadow_surface, shadow_rect)
         self.screen.blit(title_surface, title_rect)
         
-        # Options et Sliders
         options = self.get_current_options()
-        button_count = len([opt for opt in options if opt != "Back"])  # Compter les options sans "Back"
+        button_count = len([opt for opt in options if opt != "Back"])  
         start_y = self.height * 0.4
         
-        # Calculer l'espacement entre les boutons
-        total_height = button_count * 70  # 70 pixels par bouton
-        if total_height > (self.height * 0.8 - start_y):  # Si ça dépasse l'espace disponible
+        total_height = button_count * 70 
+        if total_height > (self.height * 0.8 - start_y):  
             spacing = (self.height * 0.8 - start_y) / button_count
         else:
             spacing = 70
         
         current_y = start_y
         for i, option in enumerate(options):
-            if option == "Back":  # Sauter le bouton Back pour le moment
+            if option == "Back": 
                 continue
             
             if self.current_tab == "settings" and "Volume" in option:
-                # Slider avec design amélioré
                 slider_rect = pygame.Rect(
                     self.width/2 - self.slider_width/2,
                     current_y,
@@ -364,17 +326,14 @@ class Menu:
                 )
                 self.sliders[option] = slider_rect
                 
-                # Texte du slider
                 value = self.get_slider_value(option)
                 text = f"{option.split(':')[0]}: {int(value * 100)}%"
                 text_surface = self.font.render(text, True, self.COLOR_ACTIVE)
                 text_rect = text_surface.get_rect(midtop=(self.width/2, current_y - 40))
                 self.screen.blit(text_surface, text_rect)
                 
-                # Fond du slider
                 pygame.draw.rect(self.screen, self.COLOR_SLIDER_BG, slider_rect)
                 
-                # Partie remplie
                 filled_rect = pygame.Rect(
                     slider_rect.left,
                     slider_rect.top,
@@ -383,13 +342,11 @@ class Menu:
                 )
                 pygame.draw.rect(self.screen, self.COLOR_SLIDER_FG, filled_rect)
                 
-                # Bouton du slider
                 button_x = slider_rect.left + (slider_rect.width * value)
                 button_center = (button_x, slider_rect.centery)
                 pygame.draw.circle(self.screen, self.COLOR_SLIDER_FG, button_center, 
                                  self.slider_button_size/2)
-            elif self.current_tab == "settings" and ("Fullscreen" in option or "Show FPS" in option):
-                # Boutons On/Off
+            elif self.current_tab == "settings" and "Show FPS" in option:
                 rect = pygame.Rect(
                     self.width/2 - 100,
                     current_y,
@@ -398,11 +355,7 @@ class Menu:
                 )
                 self.button_rects[i] = rect
                 
-                # Texte avec état
-                if "Fullscreen" in option:
-                    text = f"Fullscreen: {'On' if self.settings.fullscreen else 'Off'}"
-                else:
-                    text = f"Show FPS: {'On' if self.settings.show_fps else 'Off'}"
+                text = f"Show FPS: {'On' if self.settings.show_fps else 'Off'}"
                 
                 color = self.COLOR_HOVER if i == self.hover_option else self.COLOR_INACTIVE
                 pygame.draw.rect(self.screen, color, rect)
@@ -411,7 +364,6 @@ class Menu:
                 text_rect = text_surface.get_rect(center=rect.center)
                 self.screen.blit(text_surface, text_rect)
             else:
-                # Boutons rectangulaires avec effet de survol
                 rect = pygame.Rect(
                     self.width/2 - 100,
                     current_y,
@@ -420,22 +372,18 @@ class Menu:
                 )
                 self.button_rects[i] = rect
                 
-                # Dessiner le rectangle du bouton
                 color = self.COLOR_HOVER if i == self.hover_option else self.COLOR_INACTIVE
                 pygame.draw.rect(self.screen, color, rect)
                 
-                # Texte du bouton
                 text_surface = self.font.render(option, True, self.COLOR_ACTIVE)
                 text_rect = text_surface.get_rect(center=rect.center)
                 self.screen.blit(text_surface, text_rect)
             
             current_y += spacing
         
-        # Afficher les contrôles
         if self.current_tab == "controls":
             self.draw_controls_info()
         
-        # Dessiner le bouton Back en dernier (sauf dans le menu principal)
         if self.current_tab != "main":
             back_index = next(i for i, opt in enumerate(options) if opt == "Back")
             back_rect = pygame.Rect(
@@ -446,12 +394,10 @@ class Menu:
             )
             self.button_rects[back_index] = back_rect
             
-            # Dessiner le rectangle du bouton
             color = self.COLOR_HOVER if back_index == self.hover_option else self.COLOR_INACTIVE
             pygame.draw.rect(self.screen, color, back_rect, border_radius=10)
             pygame.draw.rect(self.screen, (0, 200, 255), back_rect, 2, border_radius=10)
             
-            # Texte du bouton
             back_text = self.font.render("Back", True, self.COLOR_ACTIVE)
             back_rect_text = back_text.get_rect(center=back_rect.center)
             self.screen.blit(back_text, back_rect_text) 

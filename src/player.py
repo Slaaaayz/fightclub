@@ -5,14 +5,12 @@ from src.sound_manager import SoundManager
 
 class Player:
     def __init__(self, pos, sprite_path, player_num):
-        # Initialisation du sprite manager
         self.sprite_manager = SpriteManager()
         try:
             self.sprite_manager.load_sprite_sheets(sprite_path)
         except Exception as e:
             print(f"Erreur lors du chargement des sprites pour le joueur {player_num}: {e}")
         
-        # Obtenir le premier sprite pour initialiser le rect
         initial_sprite = self.sprite_manager.get_current_sprite()
         if initial_sprite:
             self.rect = initial_sprite.get_rect()
@@ -23,54 +21,48 @@ class Player:
         self.rect.x, self.rect.y = pos
         
         self.velocity = pygame.math.Vector2(0, 0)
-        self.acceleration = pygame.math.Vector2(0, 0.5)  # Activer la gravité immédiatement
+        self.acceleration = pygame.math.Vector2(0, 0.5)  
         self.speed = 5
         self.jump_power = -12
         self.can_double_jump = True
-        self.is_spawning = False  # Désactiver l'état de spawn
+        self.is_spawning = False 
         
         self.health = 100
-        self.lives = 3  # Nombre de vies initial
+        self.lives = 3  
         self.respawn_pos = pos  # Sauvegarder la position de spawn
-        self.is_dead = False  # État de mort temporaire
+        self.is_dead = False  
         self.is_attacking = False
         self.attack_cooldown = 0
-        self.attack_type = None  # Pour différents types d'attaques
+        self.attack_type = None  
         self.attack_rect = pygame.Rect(0, 0, 50, 50)
         self.attack_direction = "right"
         self.invincible = 0  # Frames d'invincibilité après avoir été touché
-        self.combo_count = 0  # Compteur de combo
-        self.last_attack_time = 0  # Pour gérer les combos
+        self.combo_count = 0  
+        self.last_attack_time = 0  
         
         self.player_num = player_num
         self.facing_right = True if player_num == 1 else False
-        self.jump_pressed = False  # Nouvel attribut pour suivre l'état de la touche de saut
+        self.jump_pressed = False  
         
-        # Remplacer la création d'une nouvelle instance par None
         self.sound_manager = None
         
-        # États des attaques
         self.is_attacking = False
         self.attack_cooldown = 0
         self.attack_type = None
         self.attack_rect = pygame.Rect(0, 0, 50, 50)
         self.attack_direction = "right"
         
-        # Cooldowns spécifiques pour chaque type d'attaque
         self.light_attack_cooldown = 0
         self.heavy_attack_cooldown = 0
         self.special_attack_cooldown = 0
         
-        # États des touches
         self.light_attack_pressed = False
         self.heavy_attack_pressed = False
         self.special_attack_pressed = False
 
     def update(self, obstacles):
-        # Mettre à jour l'animation
         self.sprite_manager.update(1)
         
-        # Mise à jour des cooldowns
         if self.light_attack_cooldown > 0:
             self.light_attack_cooldown -= 1
         if self.heavy_attack_cooldown > 0:
@@ -83,7 +75,6 @@ class Player:
             if self.attack_cooldown == 0:
                 self.is_attacking = False
                 self.attack_type = None
-                # Forcer la réinitialisation de l'animation
                 if self.velocity.y != 0:
                     self.sprite_manager.set_animation("jump", force=True)
                 elif abs(self.velocity.x) > 0:
@@ -91,7 +82,6 @@ class Player:
                 else:
                     self.sprite_manager.set_animation("idle", force=True)
         
-        # Déterminer l'animation en fonction de l'état
         if self.is_attacking:
             if self.attack_type == "light":
                 self.sprite_manager.set_animation("attack1")
@@ -99,40 +89,34 @@ class Player:
                 self.sprite_manager.set_animation("attack2")
             elif self.attack_type == "special":
                 self.sprite_manager.set_animation("attack3")
-        elif self.velocity.y != 0:  # En l'air (saut ou chute)
+        elif self.velocity.y != 0:  
             self.sprite_manager.set_animation("jump")
         elif abs(self.velocity.x) > 0:
             self.sprite_manager.set_animation("run")
         else:
             self.sprite_manager.set_animation("idle")
         
-        # Mettre à jour l'orientation du sprite
         self.sprite_manager.set_flip(not self.facing_right)
         
-        # Application de la gravité
         self.velocity += self.acceleration
         
-        # Mise à jour de la position
         self.rect.x += self.velocity.x
         self.check_collision(obstacles, 'x')
         self.rect.y += self.velocity.y
         self.check_collision(obstacles, 'y')
         
-        # Contrôles
         keys = pygame.key.get_pressed()
         if self.player_num == 1:
             self.handle_player1_input(keys)
         else:
             self.handle_player2_input(keys)
             
-        # Mise à jour du rectangle d'attaque
         self.update_attack_rect()
         
         if self.invincible > 0:
             self.invincible -= 1
         
-        # Réinitialisation du combo si trop de temps s'est écoulé
-        if pygame.time.get_ticks() - self.last_attack_time > 1000:  # 1 seconde
+        if pygame.time.get_ticks() - self.last_attack_time > 1000:  
             self.combo_count = 0
 
          # Mort si le joueur tombe
@@ -225,7 +209,6 @@ class Player:
             self.special_attack_pressed = False
 
     def jump(self):
-        # Vérification si le joueur est au sol
         if self.velocity.y == 0:
             self.velocity.y = self.jump_power
             self.can_double_jump = True
@@ -241,7 +224,6 @@ class Player:
     def attack(self, attack_type):
         current_time = pygame.time.get_ticks()
         
-        # Vérifier le cooldown spécifique au type d'attaque
         if attack_type == "light" and self.light_attack_cooldown > 0:
             return
         elif attack_type == "heavy" and self.heavy_attack_cooldown > 0:
@@ -256,7 +238,6 @@ class Player:
         if self.sound_manager:
             self.sound_manager.play_sound('attack')
         
-        # Gestion des combos
         if current_time - self.last_attack_time < 500:
             self.combo_count += 1
         else:
@@ -266,7 +247,6 @@ class Player:
         self.is_attacking = True
         self.attack_type = attack_type
         
-        # Configuration des attaques
         if attack_type == "light":
             self.attack_cooldown = 20
             self.light_attack_cooldown = 30
@@ -282,7 +262,6 @@ class Player:
         else:
             return
 
-        # Mettre à jour immédiatement le rectangle d'attaque
         self.update_attack_rect()
 
     def get_attack_damage(self):
@@ -292,8 +271,7 @@ class Player:
             "special": 15
         }
         
-        # Bonus de combo
-        combo_multiplier = min(1 + (self.combo_count * 0.2), 2.0)  # Max 2x damage
+        combo_multiplier = min(1 + (self.combo_count * 0.2), 2.0)  
         return base_damage.get(self.attack_type, 0) * combo_multiplier
 
     def take_damage(self, amount):
@@ -330,32 +308,28 @@ class Player:
         self.health = 100
         self.rect.x, self.rect.y = self.respawn_pos
         self.velocity = pygame.math.Vector2(0, 0)
-        self.acceleration = pygame.math.Vector2(0, 0.5)  # Activer la gravité immédiatement
-        self.is_spawning = False  # Ne pas activer l'état de spawn
+        self.acceleration = pygame.math.Vector2(0, 0.5)  
+        self.is_spawning = False  
         self.invincible = 60
         
-        # Réinitialiser les états d'attaque
         self.is_attacking = False
         self.attack_cooldown = 0
         self.attack_type = None
         self.combo_count = 0
 
     def update_attack_rect(self):
-        """Met à jour la position du rectangle d'attaque"""
         if self.is_attacking:
-            # Réduire la taille des hitbox pour chaque type d'attaque
             if self.attack_type == "light":
-                width, height = 40, 30  # Réduit de 60,40 à 40,30
+                width, height = 40, 30  
             elif self.attack_type == "heavy":
-                width, height = 45, 35  # Réduit de 70,50 à 45,35
+                width, height = 45, 35  
             elif self.attack_type == "special":
-                width, height = 50, 40  # Réduit de 80,60 à 50,40
+                width, height = 50, 40  
             else:
-                width, height = 35, 35  # Réduit de 50,50 à 35,35
+                width, height = 35, 35  
             
             self.attack_rect.size = (width, height)
             
-            # Ajuster la position pour que l'attaque soit plus proche du joueur
             if self.facing_right:
                 self.attack_rect.midleft = (self.rect.right - 10, self.rect.centery)
             else:
@@ -365,25 +339,15 @@ class Player:
         for obstacle in obstacles:
             if self.rect.colliderect(obstacle):
                 if direction == 'x':
-                    # Au lieu de téléporter, on arrête simplement le mouvement
                     self.velocity.x = 0
                 elif direction == 'y':
-                    # Collision verticale uniquement quand on tombe
                     if self.velocity.y > 0:
-                        # On ne bloque que si on est au-dessus de la plateforme
                         if self.rect.bottom - self.velocity.y <= obstacle.top + 10:
                             self.rect.bottom = obstacle.top
                             self.velocity.y = 0
-                    # On ne bloque plus les collisions vers le haut
-                    # elif self.velocity.y < 0:
-                    #     self.rect.top = obstacle.bottom
-                    #     self.velocity.y = 0
 
     def draw(self, screen):
         current_sprite = self.sprite_manager.get_current_sprite()
         if current_sprite:
             screen.blit(current_sprite, self.rect)
         
-        # Supprimer ou commenter les lignes suivantes pour ne plus afficher les rectangles rouges
-        # if self.is_attacking:
-        #     pygame.draw.rect(screen, (255, 0, 0), self.attack_rect, 2) 

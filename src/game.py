@@ -11,14 +11,9 @@ class Game:
         self.screen = screen
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
-        
         self.clock = pygame.time.Clock()
         self.running = True
-        
-        # Stocker la référence aux ressources
         self.resources = resources
-        
-        # Utiliser les ressources partagées
         self.sound_manager = resources.sound_manager
         self.settings = resources.settings
         
@@ -60,8 +55,8 @@ class Game:
         # Récupérer tous les points de spawn
         for obj in self.tmx_data.objects:
             if obj.type == "Spawn":
-                spawn_num = int(obj.name[-1])  # Prend le dernier caractère du nom
-                spawn_y = obj.y - 100  # Augmenté à -100 pour un spawn plus haut car ça bug pour l'instant
+                spawn_num = int(obj.name[-1]) 
+                spawn_y = obj.y - 100  
                 spawn_dict[spawn_num] = (obj.x, spawn_y)
         
         # Sélectionner aléatoirement 2 points de spawn différents
@@ -71,7 +66,7 @@ class Game:
         else:
             # Points de spawn par défaut si pas assez de points définis
             spawn_points = [
-                (self.width * 0.25, self.height * 0.3),  # Spawn plus haut par défaut
+                (self.width * 0.25, self.height * 0.3),  
                 (self.width * 0.75, self.height * 0.3)
             ]
         
@@ -105,7 +100,6 @@ class Game:
         return obstacles
 
     def run(self):
-        # Recharger et appliquer les paramètres au début du jeu
         self.settings.load_settings()
         self.apply_settings()
         
@@ -132,7 +126,6 @@ class Game:
         self.player1.update(self.get_obstacles())
         self.player2.update(self.get_obstacles())
         
-        # Ajouter la vérification des collisions d'attaque
         self.handle_player_collision()
         
         # Vérifier si un joueur a gagné
@@ -155,7 +148,6 @@ class Game:
         self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
 
     def draw_fps(self):
-        """Méthode utilitaire pour afficher les FPS"""
         if self.settings.show_fps:
             fps = str(int(self.clock.get_fps()))
             fps_surface = pygame.font.Font(None, 36).render(fps, True, (255, 255, 255))
@@ -179,12 +171,10 @@ class Game:
         health_bar_height = 20
         margin = 20
         
-        # Utiliser le sprite actuel du SpriteManager au lieu de self.sprite
         player1_sprite = self.player1.sprite_manager.get_current_sprite()
         if player1_sprite:
             player_portrait = pygame.transform.scale(player1_sprite, (portrait_size, portrait_size))
         else:
-            # Créer un portrait par défaut si pas de sprite
             player_portrait = pygame.Surface((portrait_size, portrait_size))
             player_portrait.fill((255, 0, 0))  # Rouge par défaut
         
@@ -200,7 +190,6 @@ class Game:
                          health_bar_width * (self.player1.health/100), health_bar_height))
         
         # Interface du joueur 2 (droite)
-        # Utiliser le sprite actuel du joueur 2
         player2_sprite = self.player2.sprite_manager.get_current_sprite()
         if player2_sprite:
             player2_portrait = pygame.transform.scale(player2_sprite, (portrait_size, portrait_size))
@@ -237,7 +226,6 @@ class Game:
                                      margin + portrait_size + 5))
 
     def handle_player_collision(self):
-        """Gère les collisions entre les joueurs et leurs attaques"""
         if self.player1.is_attacking and self.player1.attack_rect.colliderect(self.player2.rect):
             if not self.player2.invincible:  # Vérifier si le joueur 2 n'est pas invincible
                 damage = self.player1.get_attack_damage()
@@ -249,8 +237,6 @@ class Game:
                 self.player1.take_damage(damage)
 
     def reset_game(self):
-        """Réinitialise le jeu sans recréer la fenêtre"""
-        # Recharger et appliquer les paramètres lors du reset
         self.settings.load_settings()
         self.apply_settings()
         
@@ -260,35 +246,27 @@ class Game:
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
         
-        # Assigner le sound_manager aux joueurs
         self.player1.sound_manager = self.sound_manager
         self.player2.sound_manager = self.sound_manager
 
     def show_game_over(self, winner):
-        # Recharger et appliquer les paramètres au début de l'écran game over
         self.settings.load_settings()
         self.apply_settings()
         
-        # Jouer le son de mort sans arrêter la musique de fond
         self.sound_manager.play_sound('death')
         
-        # Configuration de base
         overlay = pygame.Surface((self.width, self.height))
         overlay.fill((0, 0, 0))
-        overlay.set_alpha(200)  # Semi-transparent
-        
-        # Polices
+        overlay.set_alpha(200)  
         title_font = pygame.font.Font(None, 120)
         text_font = pygame.font.Font(None, 74)
         button_font = pygame.font.Font(None, 50)
         
-        # Couleurs
         winner_colors = {
             1: (200, 50, 50),  # Rouge pour joueur 1
             2: (50, 50, 200)   # Bleu pour joueur 2
         }
         
-        # Boutons
         button_width = 200
         button_height = 60
         button_margin = 20
@@ -296,11 +274,10 @@ class Game:
         replay_button = pygame.Rect(self.width//2 - button_width - button_margin, 
                                   self.height * 3//4, 
                                   button_width, button_height)
-        menu_button = pygame.Rect(self.width//2 + button_margin,  # Renommé de quit_button à menu_button
+        menu_button = pygame.Rect(self.width//2 + button_margin, 
                                 self.height * 3//4, 
                                 button_width, button_height)
         
-        # Animation
         alpha = 0
         scale = 0.1
         rotation = 0
@@ -319,37 +296,32 @@ class Game:
                     if replay_button.collidepoint(event.pos):
                         action = "replay"
                         animation_done = True
-                    elif menu_button.collidepoint(event.pos):  # Changé de quit_button à menu_button
-                        action = "menu"  # Retourner "menu" au lieu de "quit"
+                    elif menu_button.collidepoint(event.pos):  
+                        action = "menu" 
                         animation_done = True
             
-            # Mise à jour de l'animation
             if alpha < 200:
                 alpha += 5
             if scale < 1:
                 scale += 0.05
             rotation = (rotation + 2) % 360
             
-            # Dessin
             self.screen.blit(self.map_surface, (0, 0))
             self.screen.blit(overlay, (0, 0))
             
-            # Texte "GAME OVER"
             game_over_text = title_font.render("GAME OVER", True, (255, 255, 255))
             text_rect = game_over_text.get_rect(center=(self.width//2, self.height//3))
             rotated_text = pygame.transform.rotozoom(game_over_text, rotation * (1-scale), scale)
             rotated_rect = rotated_text.get_rect(center=text_rect.center)
             self.screen.blit(rotated_text, rotated_rect)
             
-            # Texte du gagnant
             if scale > 0.5:
                 winner_text = text_font.render(f"Player {winner} Wins!", True, winner_colors[winner])
                 winner_rect = winner_text.get_rect(center=(self.width//2, self.height//2))
                 winner_text.set_alpha(alpha)
                 self.screen.blit(winner_text, winner_rect)
                 
-                # Dessiner les boutons
-                # Replay button
+              
                 button_color = (100, 255, 100) if replay_button.collidepoint(mouse_pos) else (50, 200, 50)
                 pygame.draw.rect(self.screen, button_color, replay_button)
                 replay_text = button_font.render("Replay", True, (255, 255, 255))
@@ -357,7 +329,6 @@ class Game:
                                (replay_button.centerx - replay_text.get_width()//2,
                                 replay_button.centery - replay_text.get_height()//2))
                 
-                # Menu button (anciennement Quit button)
                 button_color = (255, 100, 100) if menu_button.collidepoint(mouse_pos) else (200, 50, 50)
                 pygame.draw.rect(self.screen, button_color, menu_button)
                 menu_text = button_font.render("Menu", True, (255, 255, 255))
@@ -365,7 +336,6 @@ class Game:
                                (menu_button.centerx - menu_text.get_width()//2,
                                 menu_button.centery - menu_text.get_height()//2))
             
-            # Ajouter l'affichage des FPS
             self.draw_fps()
             
             pygame.display.flip()
@@ -385,8 +355,8 @@ class Game:
                     return "quit"
                 
                 result = menu.handle_event(event)
-                if result is False:  # Le menu indique qu'il faut démarrer le jeu
-                    self.reset_game()  # Réinitialiser le jeu avant de commencer
+                if result is False:  
+                    self.reset_game() 
                     return "play"
             
             menu.draw()
@@ -395,31 +365,24 @@ class Game:
             self.clock.tick(60)
 
     def show_pause_menu(self):
-        """Affiche le menu pause"""
-        # Recharger les paramètres depuis le fichier
         self.settings.load_settings()
-        # Appliquer les volumes chargés
         self.sound_manager.set_master_volume(self.settings.master_volume)
         self.sound_manager.set_music_volume(self.settings.music_volume)
         self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
         
-        # Surface semi-transparente
         overlay = pygame.Surface((self.width, self.height))
         overlay.fill((0, 0, 0))
         overlay.set_alpha(128)
         
-        # Police et couleurs
         font = pygame.font.Font(None, 74)
         button_font = pygame.font.Font(None, 50)
         COLOR_INACTIVE = (40, 40, 60)
         COLOR_HOVER = (60, 60, 80)
         COLOR_TEXT = (255, 255, 255)
         
-        # Texte "PAUSE"
         pause_text = font.render("PAUSE", True, COLOR_TEXT)
         pause_rect = pause_text.get_rect(center=(self.width/2, self.height * 0.3))
         
-        # Boutons
         button_width = 200
         button_height = 50
         button_margin = 20
@@ -439,7 +402,7 @@ class Game:
         paused = True
         in_settings = False
         settings_menu = None
-        last_hover = None  # Pour suivre le dernier bouton survolé
+        last_hover = None 
         
         while paused:
             mouse_pos = pygame.mouse.get_pos()
@@ -464,7 +427,6 @@ class Game:
                         if resume_button.collidepoint(mouse_pos):
                             paused = False
                         elif menu_button.collidepoint(mouse_pos):
-                            # Retourner directement au menu sans fermer le jeu
                             return "menu"
                         elif quit_button.collidepoint(mouse_pos):
                             self.sound_manager.stop_background_music()
@@ -472,35 +434,28 @@ class Game:
                             pygame.quit()
                             exit()
             
-            # Gérer les événements du menu des paramètres
             if in_settings and settings_menu:
                 settings_menu.handle_event(event)
         
-            # Dessiner l'état actuel du jeu
             self.screen.blit(self.map_surface, (0, 0))
             self.player1.draw(self.screen)
             self.player2.draw(self.screen)
             self.draw_health_bars()
             
-            # Dessiner l'overlay semi-transparent
             self.screen.blit(overlay, (0, 0))
             
             if in_settings and settings_menu:
                 settings_menu.draw()
             else:
-                # Dessiner le texte PAUSE
                 self.screen.blit(pause_text, pause_rect)
                 
-                # Dessiner les boutons de pause
                 if paused and not in_settings:
                     mouse_pos = pygame.mouse.get_pos()
                     
-                    # Définir les rectangles des boutons
                     resume_button = pygame.Rect(self.width/2 - 100, self.height/2 - 100, 200, 50)
                     menu_button = pygame.Rect(self.width/2 - 100, self.height/2, 200, 50)
                     quit_button = pygame.Rect(self.width/2 - 100, self.height/2 + 100, 200, 50)
                     
-                    # Vérifier le hover pour le son
                     current_hover = None
                     if resume_button.collidepoint(mouse_pos):
                         current_hover = "resume"
@@ -509,16 +464,13 @@ class Game:
                     elif quit_button.collidepoint(mouse_pos):
                         current_hover = "quit"
                     
-                    # Jouer le son si on survole un nouveau bouton
                     if current_hover != last_hover and current_hover is not None:
                         self.sound_manager.play_sound('hover', volume=0.3)
                     last_hover = current_hover
                     
-                    # Couleurs pour l'effet hover
                     COLOR_INACTIVE = (40, 40, 60)
                     COLOR_HOVER = (60, 60, 80)
                     
-                    # Dessiner les boutons avec effet hover
                     pygame.draw.rect(self.screen, 
                         COLOR_HOVER if resume_button.collidepoint(mouse_pos) else COLOR_INACTIVE, 
                         resume_button)
@@ -529,26 +481,21 @@ class Game:
                         COLOR_HOVER if quit_button.collidepoint(mouse_pos) else COLOR_INACTIVE, 
                         quit_button)
                     
-                    # Texte des boutons avec la police par défaut
                     default_font = pygame.font.Font(None, 50)
                     resume_text = default_font.render("Resume", True, (255, 255, 255))
                     menu_text = default_font.render("Menu", True, (255, 255, 255))
                     quit_text = default_font.render("Quit", True, (255, 255, 255))
                     
-                    # Centrer le texte sur les boutons
                     self.screen.blit(resume_text, resume_text.get_rect(center=resume_button.center))
                     self.screen.blit(menu_text, menu_text.get_rect(center=menu_button.center))
                     self.screen.blit(quit_text, quit_text.get_rect(center=quit_button.center))
             
-            # Remplacer l'ancien code FPS par la nouvelle méthode
             self.draw_fps()
             
             pygame.display.flip()
             self.clock.tick(60)
 
     def apply_settings(self):
-        """Applique les paramètres chargés depuis settings.json"""
-        # Appliquer les volumes
         self.sound_manager.set_master_volume(self.settings.master_volume)
         self.sound_manager.set_music_volume(self.settings.music_volume)
         self.sound_manager.set_sfx_volume(self.settings.sfx_volume)

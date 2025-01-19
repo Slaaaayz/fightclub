@@ -40,9 +40,7 @@ class SoundManager:
             music_path = os.path.join("Assets/music", "background.mp3")
             if os.path.exists(music_path):
                 pygame.mixer.music.load(music_path)
-                # Ajuster le volume initial
                 pygame.mixer.music.set_volume(self.master_volume * self.music_volume)
-                print(f"Volume de la musique: {self.master_volume * self.music_volume}")  # Debug
         except Exception as e:
             print(f"Erreur chargement musique: {e}")
     
@@ -50,13 +48,10 @@ class SoundManager:
         if name in self.sounds:
             try:
                 if volume is not None:
-                    # Sauvegarder le volume actuel
                     current_volume = self.sounds[name].get_volume()
-                    # Appliquer le volume temporaire
                     temp_volume = volume * self.master_volume * self.sfx_volume
                     self.sounds[name].set_volume(temp_volume)
                     self.sounds[name].play()
-                    # Restaurer le volume original
                     self.sounds[name].set_volume(current_volume)
                 else:
                     self.sounds[name].play()
@@ -66,10 +61,8 @@ class SoundManager:
     def play_background_music(self):
         try:
             if not pygame.mixer.music.get_busy():
-                pygame.mixer.music.play(-1)  # -1 pour jouer en boucle
-                # S'assurer que le volume est correctement défini
+                pygame.mixer.music.play(-1)  
                 pygame.mixer.music.set_volume(self.master_volume * self.music_volume)
-                print("Musique démarrée")  # Debug
         except Exception as e:
             print(f"Erreur lors de la lecture de la musique: {e}")
     
@@ -78,7 +71,6 @@ class SoundManager:
     
     def set_master_volume(self, volume):
         self.master_volume = max(0.0, min(1.0, volume))
-        # Mettre à jour tous les volumes
         pygame.mixer.music.set_volume(self.master_volume * self.music_volume)
         for sound in self.sounds.values():
             sound.set_volume(self.master_volume * self.sfx_volume)
