@@ -11,6 +11,11 @@ class Game:
         self.screen = screen
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
+        
+        # Calculer le ratio d'aspect pour le scaling
+        self.scale_x = self.width / 1280  # 1280 est la résolution de base
+        self.scale_y = self.height / 720  # 720 est la résolution de base
+        
         self.clock = pygame.time.Clock()
         self.running = True
         self.resources = resources
@@ -73,28 +78,27 @@ class Game:
         return spawn_points
 
     def scale_positions(self, positions):
+        # Mise à jour de la méthode pour utiliser les ratios d'aspect
         original_width = self.tmx_data.width * self.tmx_data.tilewidth
         original_height = self.tmx_data.height * self.tmx_data.tileheight
-        scale_x = self.width / original_width
-        scale_y = self.height / original_height
         
         scaled_positions = []
         for pos in positions:
-            scaled_positions.append((pos[0] * scale_x, pos[1] * scale_y))
+            scaled_x = pos[0] * self.scale_x
+            scaled_y = pos[1] * self.scale_y
+            scaled_positions.append((scaled_x, scaled_y))
         return scaled_positions
 
     def get_obstacles(self):
         obstacles = []
-        scale_x = self.width / (self.tmx_data.width * self.tmx_data.tilewidth)
-        scale_y = self.height / (self.tmx_data.height * self.tmx_data.tileheight)
         
         for obj in self.tmx_data.objects:
             if obj.type == "obstacle":
                 scaled_rect = pygame.Rect(
-                    obj.x * scale_x,
-                    obj.y * scale_y,
-                    obj.width * scale_x,
-                    obj.height * scale_y
+                    obj.x * self.scale_x,
+                    obj.y * self.scale_y,
+                    obj.width * self.scale_x,
+                    obj.height * self.scale_y
                 )
                 obstacles.append(scaled_rect)
         return obstacles
