@@ -343,23 +343,23 @@ class Player:
     def update_attack_rect(self):
         """Met à jour la position du rectangle d'attaque"""
         if self.is_attacking:
-            # Ajuster la taille en fonction du type d'attaque
+            # Réduire la taille des hitbox pour chaque type d'attaque
             if self.attack_type == "light":
-                width, height = 60, 40
+                width, height = 40, 30  # Réduit de 60,40 à 40,30
             elif self.attack_type == "heavy":
-                width, height = 70, 50
+                width, height = 45, 35  # Réduit de 70,50 à 45,35
             elif self.attack_type == "special":
-                width, height = 80, 60
+                width, height = 50, 40  # Réduit de 80,60 à 50,40
             else:
-                width, height = 50, 50
+                width, height = 35, 35  # Réduit de 50,50 à 35,35
             
             self.attack_rect.size = (width, height)
             
-            # Positionner le rectangle d'attaque
+            # Ajuster la position pour que l'attaque soit plus proche du joueur
             if self.facing_right:
-                self.attack_rect.midleft = self.rect.midright
+                self.attack_rect.midleft = (self.rect.right - 10, self.rect.centery)
             else:
-                self.attack_rect.midright = self.rect.midleft
+                self.attack_rect.midright = (self.rect.left + 10, self.rect.centery)
 
     def check_collision(self, obstacles, direction):
         for obstacle in obstacles:
@@ -384,6 +384,6 @@ class Player:
         if current_sprite:
             screen.blit(current_sprite, self.rect)
         
-        # Debug: affichage du rectangle d'attaque
-        if self.is_attacking:
-            pygame.draw.rect(screen, (255, 0, 0), self.attack_rect, 2) 
+        # Supprimer ou commenter les lignes suivantes pour ne plus afficher les rectangles rouges
+        # if self.is_attacking:
+        #     pygame.draw.rect(screen, (255, 0, 0), self.attack_rect, 2) 

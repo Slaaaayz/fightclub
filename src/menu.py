@@ -215,49 +215,94 @@ class Menu:
         return 0
 
     def draw_controls_info(self):
-        # Effacer l'écran
+        # Fond
         self.screen.fill(self.COLOR_BACKGROUND)
         
-        # Titre "FIGHT CLUB" avec effet d'ombre
-        title_text = "FIGHT CLUB"
-        shadow_surface = self.title_font.render(title_text, True, (0, 0, 0))
-        title_surface = self.title_font.render(title_text, True, (0, 200, 255))
-        shadow_rect = shadow_surface.get_rect(center=(self.width/2 + 4, self.height * 0.15 + 4))
-        title_rect = title_surface.get_rect(center=(self.width/2, self.height * 0.15))
-        self.screen.blit(shadow_surface, shadow_rect)
-        self.screen.blit(title_surface, title_rect)
+        # Titre principal avec effet d'ombre
+        title_text = "CONTROLS"
+        shadow = self.title_font.render(title_text, True, (0, 0, 0))
+        title = self.title_font.render(title_text, True, (0, 200, 255))
         
-        # Paramètres pour les contrôles
-        control_font = pygame.font.Font(None, 40)
-        y_start = self.height * 0.35
-        spacing = 60
+        shadow_rect = shadow.get_rect(center=(self.width/2 + 3, 80 + 3))
+        title_rect = title.get_rect(center=(self.width/2, 80))
         
-        # Fonction pour dessiner une section de contrôles
-        def draw_control_section(title, controls, x_center):
-            # Titre de la section
-            title_surf = control_font.render(title, True, (0, 200, 255))
-            title_rect = title_surf.get_rect(center=(x_center, y_start))
-            self.screen.blit(title_surf, title_rect)
+        self.screen.blit(shadow, shadow_rect)
+        self.screen.blit(title, title_rect)
+        
+        # Configuration des panneaux de contrôle
+        panel_width = self.width * 0.35
+        panel_height = self.height * 0.6
+        panel_padding = 30
+        
+        # Panel Joueur 1 (gauche)
+        p1_panel = pygame.Rect(
+            self.width * 0.1,
+            self.height * 0.2,
+            panel_width,
+            panel_height
+        )
+        
+        # Panel Joueur 2 (droite)
+        p2_panel = pygame.Rect(
+            self.width * 0.55,
+            self.height * 0.2,
+            panel_width,
+            panel_height
+        )
+        
+        # Fonction pour dessiner un panneau de contrôle
+        def draw_control_panel(panel_rect, title, controls):
+            # Fond du panneau
+            pygame.draw.rect(self.screen, self.COLOR_INACTIVE, panel_rect, border_radius=10)
+            pygame.draw.rect(self.screen, (0, 200, 255), panel_rect, 2, border_radius=10)
             
-            y = y_start + spacing
+            # Titre du panneau
+            panel_title = pygame.font.Font(None, 48).render(title, True, (0, 200, 255))
+            title_rect = panel_title.get_rect(
+                centerx=panel_rect.centerx,
+                top=panel_rect.top + 20
+            )
+            self.screen.blit(panel_title, title_rect)
+            
+            # Ligne de séparation
+            pygame.draw.line(
+                self.screen,
+                (0, 200, 255),
+                (panel_rect.left + 20, title_rect.bottom + 10),
+                (panel_rect.right - 20, title_rect.bottom + 10),
+                2
+            )
+            
+            # Contrôles
+            y = title_rect.bottom + 40
+            control_font = pygame.font.Font(None, 36)
+            
             for action, key in controls:
                 # Action
-                action_surf = control_font.render(action, True, (255, 255, 255))
-                action_rect = action_surf.get_rect(right=x_center - 30)
-                self.screen.blit(action_surf, action_rect)
+                action_text = control_font.render(action, True, (255, 255, 255))
+                action_rect = action_text.get_rect(
+                    left=panel_rect.left + panel_padding,
+                    centery=y
+                )
+                self.screen.blit(action_text, action_rect)
                 
                 # Touche
-                key_bg = pygame.Rect(x_center + 10, y - 15, 80, 40)
-                pygame.draw.rect(self.screen, self.COLOR_INACTIVE, key_bg, border_radius=5)
-                pygame.draw.rect(self.screen, (60, 60, 80), key_bg, 2, border_radius=5)
+                key_bg = pygame.Rect(
+                    panel_rect.right - 120 - panel_padding,  # Un peu plus large pour les nouveaux textes
+                    y - 15,
+                    100,  # Plus large pour accommoder les nouveaux textes
+                    30
+                )
+                pygame.draw.rect(self.screen, (40, 40, 60), key_bg, border_radius=5)
+                pygame.draw.rect(self.screen, (0, 200, 255), key_bg, 2, border_radius=5)
                 
-                key_surf = control_font.render(key, True, (200, 200, 200))
-                key_rect = key_surf.get_rect(center=key_bg.center)
-                self.screen.blit(key_surf, key_rect)
+                key_text = control_font.render(key, True, (200, 200, 200))
+                key_rect = key_text.get_rect(center=key_bg.center)
+                self.screen.blit(key_text, key_rect)
                 
-                y += spacing
+                y += 60
         
-        # Contrôles Joueur 1
+        # Contrôles des joueurs
         controls_p1 = [
             ("Move Left", "Q"),
             ("Move Right", "D"),
@@ -266,37 +311,19 @@ class Menu:
             ("Heavy Attack", "A"),
             ("Special Attack", "E")
         ]
-        draw_control_section("PLAYER 1", controls_p1, self.width * 0.3)
         
-        # Contrôles Joueur 2
         controls_p2 = [
-            ("Move Left", "←"),
-            ("Move Right", "→"),
-            ("Jump", "↑"),
+            ("Move Left", "LEFT"),
+            ("Move Right", "RIGHT"),
+            ("Jump", "UP"),
             ("Light Attack", "Enter"),
-            ("Heavy Attack", "↓"),
+            ("Heavy Attack", "DOWN"),
             ("Special Attack", "R-Shift")
         ]
-        draw_control_section("PLAYER 2", controls_p2, self.width * 0.7)
         
-        # Bouton Back
-        back_rect = pygame.Rect(
-            self.width/2 - 100,
-            self.height * 0.85,
-            200,
-            50
-        )
-        
-        # Effet hover sur le bouton Back
-        mouse_pos = pygame.mouse.get_pos()
-        back_color = self.COLOR_HOVER if back_rect.collidepoint(mouse_pos) else self.COLOR_INACTIVE
-        
-        pygame.draw.rect(self.screen, back_color, back_rect, border_radius=5)
-        pygame.draw.rect(self.screen, (60, 60, 80), back_rect, 2, border_radius=5)
-        
-        back_text = self.font.render("Back", True, self.COLOR_ACTIVE)
-        back_text_rect = back_text.get_rect(center=back_rect.center)
-        self.screen.blit(back_text, back_text_rect)
+        # Dessiner les panneaux
+        draw_control_panel(p1_panel, "PLAYER 1", controls_p1)
+        draw_control_panel(p2_panel, "PLAYER 2", controls_p2)
 
     def draw(self):
         self.screen.fill(self.COLOR_BACKGROUND)
@@ -413,7 +440,7 @@ class Menu:
             back_index = next(i for i, opt in enumerate(options) if opt == "Back")
             back_rect = pygame.Rect(
                 self.width/2 - 100,
-                self.height * 0.85,  # Position fixe plus basse
+                self.height * 0.85,
                 200,
                 50
             )
@@ -421,7 +448,8 @@ class Menu:
             
             # Dessiner le rectangle du bouton
             color = self.COLOR_HOVER if back_index == self.hover_option else self.COLOR_INACTIVE
-            pygame.draw.rect(self.screen, color, back_rect)
+            pygame.draw.rect(self.screen, color, back_rect, border_radius=10)
+            pygame.draw.rect(self.screen, (0, 200, 255), back_rect, 2, border_radius=10)
             
             # Texte du bouton
             back_text = self.font.render("Back", True, self.COLOR_ACTIVE)
