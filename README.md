@@ -13,6 +13,13 @@ Un jeu de combat 2D inspiré de Brawlhalla, développé avec Pygame.
 pip install -r requirements.txt
 ```
 
+### Installation du répository
+
+```bash
+git clone https://github.com/Slaaaayz/fightclub.git
+```
+
+
 ### Lancement du jeu
 ```bash
 python3 main.py # Linux
