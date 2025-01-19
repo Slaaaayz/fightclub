@@ -114,11 +114,15 @@ class Game:
         
         # Vérifier si un joueur a gagné
         if self.player1.lives <= 0 or self.player2.lives <= 0:
-            self.running = False  # Fin du jeu
-        
-        # Gestion des collisions entre joueurs
-        if self.player1.rect.colliderect(self.player2.rect):
-            self.handle_player_collision()
+            winner = 2 if self.player1.lives <= 0 else 1
+            action = self.show_game_over(winner)
+            if action == "quit":
+                self.running = False
+                pygame.quit()
+                exit()  # Quitte complètement le programme
+            elif action == "replay":
+                # Réinitialiser le jeu
+                self.__init__()
 
     def draw(self):
         self.screen.fill((0, 0, 0))
@@ -204,6 +208,109 @@ class Game:
         if self.player2.is_attacking and self.player2.attack_rect.colliderect(self.player1.rect):
             damage = self.player2.get_attack_damage()
             self.player1.take_damage(damage) 
+
+    def show_game_over(self, winner):
+        """Affiche l'écran de fin de partie"""
+        # Jouer le son de mort
+        self.player1.sound_manager.play_sound('death')
+        
+        # Configuration de base
+        overlay = pygame.Surface((self.width, self.height))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(200)  # Semi-transparent
+        
+        # Polices
+        title_font = pygame.font.Font(None, 120)
+        text_font = pygame.font.Font(None, 74)
+        button_font = pygame.font.Font(None, 50)
+        
+        # Couleurs
+        winner_colors = {
+            1: (200, 50, 50),  # Rouge pour joueur 1
+            2: (50, 50, 200)   # Bleu pour joueur 2
+        }
+        
+        # Boutons
+        button_width = 200
+        button_height = 60
+        button_margin = 20
+        
+        replay_button = pygame.Rect(self.width//2 - button_width - button_margin, 
+                                  self.height * 3//4, 
+                                  button_width, button_height)
+        quit_button = pygame.Rect(self.width//2 + button_margin, 
+                                self.height * 3//4, 
+                                button_width, button_height)
+        
+        # Animation
+        alpha = 0
+        scale = 0.1
+        rotation = 0
+        
+        clock = pygame.time.Clock()
+        animation_done = False
+        action = None
+        
+        while not animation_done:
+            mouse_pos = pygame.mouse.get_pos()
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return "quit"
+                if event.type == pygame.MOUSEBUTTONDOWN and scale > 0.8:  # Attendre que l'animation soit presque finie
+                    if replay_button.collidepoint(event.pos):
+                        action = "replay"
+                        animation_done = True
+                    elif quit_button.collidepoint(event.pos):
+                        action = "quit"
+                        animation_done = True
+            
+            # Mise à jour de l'animation
+            if alpha < 200:
+                alpha += 5
+            if scale < 1:
+                scale += 0.05
+            rotation = (rotation + 2) % 360
+            
+            # Dessin
+            self.screen.blit(self.map_surface, (0, 0))
+            self.screen.blit(overlay, (0, 0))
+            
+            # Texte "GAME OVER"
+            game_over_text = title_font.render("GAME OVER", True, (255, 255, 255))
+            text_rect = game_over_text.get_rect(center=(self.width//2, self.height//3))
+            rotated_text = pygame.transform.rotozoom(game_over_text, rotation * (1-scale), scale)
+            rotated_rect = rotated_text.get_rect(center=text_rect.center)
+            self.screen.blit(rotated_text, rotated_rect)
+            
+            # Texte du gagnant
+            if scale > 0.5:  # Apparaît après le "GAME OVER"
+                winner_text = text_font.render(f"Player {winner} Wins!", True, winner_colors[winner])
+                winner_rect = winner_text.get_rect(center=(self.width//2, self.height//2))
+                winner_text.set_alpha(alpha)
+                self.screen.blit(winner_text, winner_rect)
+                
+                # Dessiner les boutons
+                # Replay button
+                button_color = (100, 255, 100) if replay_button.collidepoint(mouse_pos) else (50, 200, 50)
+                pygame.draw.rect(self.screen, button_color, replay_button)
+                replay_text = button_font.render("Replay", True, (255, 255, 255))
+                self.screen.blit(replay_text, 
+                               (replay_button.centerx - replay_text.get_width()//2,
+                                replay_button.centery - replay_text.get_height()//2))
+                
+                # Quit button
+                button_color = (255, 100, 100) if quit_button.collidepoint(mouse_pos) else (200, 50, 50)
+                pygame.draw.rect(self.screen, button_color, quit_button)
+                quit_text = button_font.render("Quit", True, (255, 255, 255))
+                self.screen.blit(quit_text,
+                               (quit_button.centerx - quit_text.get_width()//2,
+                                quit_button.centery - quit_text.get_height()//2))
+            
+            pygame.display.flip()
+            clock.tick(60)
+        
+        return action
 
     pygame.init()
 screen_info = pygame.display.Info()
