@@ -23,11 +23,11 @@ class Player:
         self.rect.x, self.rect.y = pos
         
         self.velocity = pygame.math.Vector2(0, 0)
-        self.acceleration = pygame.math.Vector2(0, 0.5)  # Gravité
+        self.acceleration = pygame.math.Vector2(0, 0.5)  # Activer la gravité immédiatement
         self.speed = 5
         self.jump_power = -12
         self.can_double_jump = True
-        self.is_spawning = True  # Nouvel attribut pour l'état de spawn
+        self.is_spawning = False  # Désactiver l'état de spawn
         
         self.health = 100
         self.lives = 3  # Nombre de vies initial
@@ -71,36 +71,9 @@ class Player:
         # Mettre à jour l'orientation du sprite
         self.sprite_manager.set_flip(not self.facing_right)
         
-        # Si en état de spawn, attendre un mouvement pour commencer à tomber
-        if self.is_spawning:
-            keys = pygame.key.get_pressed()
-            if (self.player_num == 1 and (keys[pygame.K_q] or keys[pygame.K_d] or keys[pygame.K_z])) or \
-               (self.player_num == 2 and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_UP])):
-                self.is_spawning = False
-            else:
-                return  # Ne pas appliquer la gravité tant qu'on est en spawn
-
-        # Mise à jour des cooldowns
-        if self.attack_cooldown > 0:
-            self.attack_cooldown -= 1
-            if self.attack_cooldown == 0:
-                self.is_attacking = False
-                self.attack_type = None
-                
-        if self.invincible > 0:
-            self.invincible -= 1
-            
-        # Réinitialisation du combo si trop de temps s'est écoulé
-        if pygame.time.get_ticks() - self.last_attack_time > 1000:  # 1 seconde
-            self.combo_count = 0
-
         # Application de la gravité
         self.velocity += self.acceleration
         
-        # Augmentation de la gravité si la santé est faible
-        if self.health < 30:
-            self.velocity.y += 0.2
-            
         # Mise à jour de la position
         self.rect.x += self.velocity.x
         self.check_collision(obstacles, 'x')
@@ -270,11 +243,18 @@ class Player:
         self.velocity.x = knockback_force * (-1 if self.facing_right else 1)
 
     def respawn(self):
-        self.health = 100  # Réinitialiser la santé
-        self.rect.x, self.rect.y = self.respawn_pos  # Retour au point de spawn
-        self.velocity = pygame.math.Vector2(0, 0)  # Réinitialiser la vélocité
-        self.is_spawning = True  # Remettre en état de spawn
-        self.invincible = 60  # Invincibilité plus longue au respawn
+        self.health = 100
+        self.rect.x, self.rect.y = self.respawn_pos
+        self.velocity = pygame.math.Vector2(0, 0)
+        self.acceleration = pygame.math.Vector2(0, 0.5)  # Activer la gravité immédiatement
+        self.is_spawning = False  # Ne pas activer l'état de spawn
+        self.invincible = 60
+        
+        # Réinitialiser les états d'attaque
+        self.is_attacking = False
+        self.attack_cooldown = 0
+        self.attack_type = None
+        self.combo_count = 0
 
     def update_attack_rect(self):
         if self.is_attacking:
