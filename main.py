@@ -1,22 +1,27 @@
-from src.game import Game
 import pygame
+from src.game import Game
+from src.sound_manager import SoundManager
 
 def main():
     pygame.init()
-    # Créer une seule fenêtre qui sera partagée
+    # Démarrer en plein écran
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    game = Game(screen)  # Passer l'écran au jeu
+    pygame.display.set_caption("Fight Club")
     
-    while True:
-        # Afficher le menu et obtenir l'action
+    # Créer une seule instance de SoundManager
+    sound_manager = SoundManager()
+    sound_manager.play_background_music()
+    
+    running = True
+    while running:
+        game = Game(screen, sound_manager)  
         action = game.run_menu()
         
-        if action == "quit":
-            break
-        elif action == "play":
-            game.run()  # Lancer le jeu
-            pygame.time.wait(500)  # Petit délai avant de revenir au menu
-
+        if action == "play":
+            game.run()
+        elif action == "quit":
+            running = False
+    
     pygame.quit()
 
 if __name__ == "__main__":

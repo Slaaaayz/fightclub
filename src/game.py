@@ -3,9 +3,11 @@ import pytmx
 from src.player import Player
 import random 
 from src.menu import Menu
+from src.sound_manager import SoundManager
+from src.settings import Settings
 
 class Game:
-    def __init__(self, screen):
+    def __init__(self, screen, sound_manager):
         self.screen = screen
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
@@ -13,12 +15,18 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         
+        # Utiliser le sound_manager passé en paramètre
+        self.sound_manager = sound_manager
+        
+        # Initialiser les settings
+        self.settings = Settings()
+        
         # Chargement de la map
         self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
         
-        # Création des joueurs aux points de spawn
+        # Création des joueurs
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
@@ -102,9 +110,13 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+                pygame.quit()
+                exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+                    pygame.quit()
+                    exit()
 
     def update(self):
         self.player1.update(self.get_obstacles())
@@ -124,16 +136,24 @@ class Game:
             elif action == "replay":
                 self.reset_game()
 
+        # Mettre à jour les volumes
+        self.sound_manager.set_master_volume(self.settings.master_volume)
+        self.sound_manager.set_music_volume(self.settings.music_volume)
+        self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
+
     def draw(self):
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.map_surface, (0, 0))
         
-        # Dessin des joueurs directement sur l'écran
         self.player1.draw(self.screen)
         self.player2.draw(self.screen)
-        
-        # Affichage des barres de vie
         self.draw_health_bars()
+        
+        # Afficher les FPS si activé
+        if self.settings.show_fps:
+            fps = str(int(self.clock.get_fps()))
+            fps_surface = pygame.font.Font(None, 36).render(fps, True, (255, 255, 255))
+            self.screen.blit(fps_surface, (10, 10))
         
         pygame.display.flip()
 
@@ -324,7 +344,7 @@ class Game:
         return action
 
     def run_menu(self):
-        menu = Menu(self.screen)
+        menu = Menu(self.screen, self.sound_manager)  # Passer le sound_manager au menu
         running = True
         
         while running:
