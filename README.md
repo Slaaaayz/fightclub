@@ -17,7 +17,10 @@ pip install -r requirements.txt
 
 ```bash
 git clone https://github.com/Slaaaayz/fightclub.git
+# Puis
+cd CheminVersledossier/fightclub
 ```
+
 
 
 ### Lancement du jeu
