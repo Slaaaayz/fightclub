@@ -46,8 +46,8 @@ class Player:
         self.facing_right = True if player_num == 1 else False
         self.jump_pressed = False  # Nouvel attribut pour suivre l'état de la touche de saut
         
-        # Initialiser le gestionnaire de sons
-        self.sound_manager = SoundManager()
+        # Remplacer la création d'une nouvelle instance par None
+        self.sound_manager = None
         
         # États des attaques
         self.is_attacking = False
@@ -229,12 +229,14 @@ class Player:
         if self.velocity.y == 0:
             self.velocity.y = self.jump_power
             self.can_double_jump = True
-            self.sound_manager.play_sound('jump')
+            if self.sound_manager:
+                self.sound_manager.play_sound('jump')
         # Double saut
         elif self.can_double_jump:
             self.velocity.y = self.jump_power
             self.can_double_jump = False
-            self.sound_manager.play_sound('jump')
+            if self.sound_manager:
+                self.sound_manager.play_sound('jump')
 
     def attack(self, attack_type):
         current_time = pygame.time.get_ticks()
@@ -251,7 +253,8 @@ class Player:
             return
             
         # Jouer le son d'attaque
-        self.sound_manager.play_sound('attack')
+        if self.sound_manager:
+            self.sound_manager.play_sound('attack')
         
         # Gestion des combos
         if current_time - self.last_attack_time < 500:
@@ -299,8 +302,9 @@ class Player:
             
         self.health -= amount
         
-        # Jouer le son de dégât
-        self.sound_manager.play_sound('hurt')
+        # Jouer le son de dégât s'il y a un sound_manager
+        if self.sound_manager:
+            self.sound_manager.play_sound('hurt')
         
         if self.health <= 0:
             self.lives -= 1
@@ -310,8 +314,9 @@ class Player:
                 self.is_dead = True
                 self.health = 0
                 self.acceleration.y = 1.5
-                # Jouer le son de mort
-                self.sound_manager.play_sound('death')
+                # Jouer le son de mort s'il y a un sound_manager
+                if self.sound_manager:
+                    self.sound_manager.play_sound('death')
         
         # Période d'invincibilité après avoir été touché
         self.invincible = 30

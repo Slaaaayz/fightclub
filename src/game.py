@@ -18,19 +18,24 @@ class Game:
         # Utiliser le sound_manager passé en paramètre
         self.sound_manager = sound_manager
         
-        # Initialiser les settings
+        # Initialiser les settings et appliquer les paramètres
         self.settings = Settings()
+        self.apply_settings()  # Nouvelle méthode
         
         # Chargement de la map
         self.tmx_data = pytmx.load_pygame("Assets/maps/map.tmx")
         self.map_surface = self.create_map_surface()
         self.map_surface = pygame.transform.scale(self.map_surface, (self.width, self.height))
         
-        # Création des joueurs
+        # Création des joueurs avec le sound_manager partagé
         spawn_points = self.get_spawn_points()
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
+        
+        # Assigner le sound_manager aux joueurs
+        self.player1.sound_manager = self.sound_manager
+        self.player2.sound_manager = self.sound_manager
 
     def create_map_surface(self):
         # Création de la surface de la map
@@ -114,7 +119,10 @@ class Game:
                 exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.show_pause_menu()
+                    action = self.show_pause_menu()
+                    if action == "menu":
+                        self.running = False
+                        return "menu"
 
     def update(self):
         self.player1.update(self.get_obstacles())
@@ -240,6 +248,10 @@ class Game:
         scaled_spawns = self.scale_positions(spawn_points)
         self.player1 = Player(scaled_spawns[0], "Assets/images/characters/Knight", 1)
         self.player2 = Player(scaled_spawns[1], "Assets/images/characters/Rogue", 2)
+        
+        # Ne pas oublier de réassigner le sound_manager lors du reset
+        self.player1.sound_manager = self.sound_manager
+        self.player2.sound_manager = self.sound_manager
 
     def show_game_over(self, winner):
         """Affiche l'écran de fin de partie"""
@@ -438,7 +450,7 @@ class Game:
                         if resume_button.collidepoint(mouse_pos):
                             paused = False
                         elif menu_button.collidepoint(mouse_pos):
-                            self.running = False
+                            # Retourner directement au menu sans fermer le jeu
                             return "menu"
                         elif quit_button.collidepoint(mouse_pos):
                             self.sound_manager.stop_background_music()
@@ -519,3 +531,16 @@ class Game:
             
             pygame.display.flip()
             self.clock.tick(60)
+
+    def apply_settings(self):
+        """Applique les paramètres chargés depuis settings.json"""
+        # Appliquer le mode plein écran
+        if self.settings.fullscreen:
+            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        else:
+            pygame.display.set_mode((self.width, self.height))
+        
+        # Appliquer les volumes
+        self.sound_manager.set_master_volume(self.settings.master_volume)
+        self.sound_manager.set_music_volume(self.settings.music_volume)
+        self.sound_manager.set_sfx_volume(self.settings.sfx_volume)
